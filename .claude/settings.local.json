@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(npm run:*)",
+      "Bash(pip show:*)",
+      "Bash(timeout 5 node server.js)",
+      "Bash(node -e ' *)",
+      "Bash(pg_config --version)",
+      "Bash(psql --version)",
+      "Bash(sc query *)",
+      "Bash(docker --version)",
+      "Bash(npm uninstall *)",
+      "Bash(node *)",
+      "Bash(grep -v \"Use \\\\`node\")",
+      "Bash(claude install *)",
+      "Bash(echo \"exit code: $?\")",
+      "Bash(netstat -ano)",
+      "Bash(xargs grep *)"
+    ]
+  }
+}

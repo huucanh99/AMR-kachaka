@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AMR Platform — UI Mockup v2</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f3; color: #1a1a1a; }
+.page { display: flex; width: 100%; min-height: 100vh; background: #f5f5f3; page-break-after: always; }
+.page:last-child { page-break-after: auto; }
+.sidebar { width: 200px; background: #fff; border-right: 0.5px solid #e5e5e2; display: flex; flex-direction: column; padding: 1rem 0; flex-shrink: 0; }
+.sidebar-logo { padding: 0.5rem 1.25rem 1.25rem; font-size: 15px; font-weight: 500; border-bottom: 0.5px solid #e5e5e2; margin-bottom: 0.5rem; }
+.sidebar-logo span { font-size: 12px; color: #888; display: block; font-weight: 400; margin-top: 2px; }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 1.25rem; font-size: 14px; color: #888; border-left: 2px solid transparent; }
+.nav-item.active { color: #1a1a1a; background: #f5f5f3; border-left: 2px solid #378ADD; font-weight: 500; }
+.nav-item svg { width: 15px; height: 15px; flex-shrink: 0; }
+.admin-badge { font-size: 10px; background: #E6F1FB; color: #185FA5; border-radius: 4px; padding: 1px 5px; margin-left: auto; white-space: nowrap; }
+.main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.topbar { background: #fff; border-bottom: 0.5px solid #e5e5e2; padding: 0.75rem 1.5rem; display: flex; align-items: center; justify-content: space-between; }
+.topbar-title { font-size: 16px; font-weight: 500; }
+.topbar-right { display: flex; align-items: center; gap: 1rem; font-size: 13px; color: #888; }
+.battery-wrap { display: flex; align-items: center; gap: 6px; }
+.battery-bar { width: 26px; height: 12px; border: 1.5px solid #aaa; border-radius: 2px; padding: 2px; display: flex; align-items: center; position: relative; }
+.battery-bar::after { content:''; position:absolute; right:-5px; top:50%; transform:translateY(-50%); width:3px; height:5px; background:#aaa; border-radius:0 1px 1px 0; }
+.battery-fill { height:100%; width:82%; background:#639922; border-radius:1px; }
+.avatar { width:28px; height:28px; border-radius:50%; background:#dbeafe; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:500; color:#1d4ed8; }
+.content { flex:1; padding:1.5rem; display:flex; flex-direction:column; gap:1rem; }
+.card { background:#fff; border:0.5px solid #e5e5e2; border-radius:12px; padding:1.25rem 1.5rem; }
+.card-title { font-size:11px; font-weight:500; color:#888; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:1rem; }
+.card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem; }
+.badge { display:inline-flex; align-items:center; gap:4px; font-size:11px; padding:3px 9px; border-radius:99px; font-weight:500; }
+.badge.done { background:#EAF3DE; color:#3B6D11; }
+.badge.failed { background:#FCEBEB; color:#A32D2D; }
+.badge.running { background:#E6F1FB; color:#185FA5; }
+.badge.waiting { background:#FAEEDA; color:#854F0B; }
+.badge.active { background:#EAF3DE; color:#3B6D11; }
+.badge.busy { background:#FCEBEB; color:#A32D2D; }
+.badge.maintenance { background:#FAEEDA; color:#854F0B; }
+.dot { width:6px; height:6px; border-radius:50%; display:inline-block; margin-right:3px; }
+table { width:100%; border-collapse:collapse; font-size:13px; }
+th { text-align:left; font-size:11px; color:#aaa; font-weight:400; padding:5px 10px 8px; border-bottom:0.5px solid #e5e5e2; white-space:nowrap; }
+td { padding:10px; border-bottom:0.5px solid #e5e5e2; }
+tr:last-child td { border-bottom:none; }
+.task-link { color:#185FA5; font-weight:500; }
+.stat { background:#f5f5f3; border-radius:8px; padding:10px 12px; }
+.stat-label { font-size:11px; color:#aaa; margin-bottom:4px; }
+.stat-value { font-size:14px; font-weight:500; }
+.stat-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+.form-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem 1.5rem; }
+.form-group { display:flex; flex-direction:column; gap:5px; }
+.form-label { font-size:12px; color:#666; font-weight:500; }
+.form-hint { font-size:11px; color:#aaa; }
+select, input[type="text"] { width:100%; padding:7px 10px; border-radius:7px; border:0.5px solid #ddd; background:#fff; color:#1a1a1a; font-size:13px; font-family:inherit; }
+.btn-primary { padding:9px 22px; background:#185FA5; border:none; border-radius:8px; color:white; font-size:13px; font-weight:500; cursor:pointer; font-family:inherit; }
+.btn-secondary { padding:7px 14px; background:#f5f5f3; border:0.5px solid #ddd; border-radius:8px; color:#666; font-size:12px; cursor:pointer; font-family:inherit; }
+.btn-cancel { font-size:11px; color:#A32D2D; background:#FCEBEB; border:0.5px solid #F09595; border-radius:6px; padding:3px 8px; cursor:pointer; }
+.btn-edit { font-size:11px; color:#185FA5; background:#E6F1FB; border:0.5px solid #B5D4F4; border-radius:6px; padding:4px 10px; cursor:pointer; white-space:nowrap; }
+.btn-maint { font-size:11px; color:#854F0B; background:#FAEEDA; border:0.5px solid #FAC775; border-radius:6px; padding:4px 10px; cursor:pointer; white-space:nowrap; }
+.btn-activate { font-size:11px; color:#3B6D11; background:#EAF3DE; border:0.5px solid #C0DD97; border-radius:6px; padding:4px 10px; cursor:pointer; white-space:nowrap; }
+.edit-toggle { font-size:11px; color:#666; background:#f5f5f3; border:0.5px solid #ddd; border-radius:7px; padding:3px 10px; }
+.divider { border:none; border-top:0.5px solid #e5e5e2; margin:1rem 0 0.5rem; }
+.toggle { width:36px; height:19px; background:#639922; border-radius:99px; display:flex; align-items:center; padding:2px; }
+.toggle-knob { width:15px; height:15px; border-radius:50%; background:white; margin-left:auto; }
+.log-badge { display:inline-flex; font-size:10px; padding:2px 7px; border-radius:4px; font-weight:500; }
+.log-badge.info { background:#E6F1FB; color:#185FA5; }
+.log-badge.warn { background:#FAEEDA; color:#854F0B; }
+.log-badge.error { background:#FCEBEB; color:#A32D2D; }
+.pill { padding:3px 10px; border-radius:99px; font-size:11px; font-weight:500; border:0.5px solid transparent; display:inline-block; margin-right:6px; }
+.pill.all { background:#f0f0ee; color:#666; border-color:#ddd; }
+.pill.info { background:#E6F1FB; color:#185FA5; border-color:#B5D4F4; }
+.pill.warn { background:#FAEEDA; color:#854F0B; border-color:#FAC775; }
+.pill.error { background:#FCEBEB; color:#A32D2D; border-color:#F7C1C1; }
+.ctrl-btn { flex:1; min-width:100px; padding:9px 12px; border-radius:8px; border:0.5px solid #ddd; background:#fff; font-size:12px; font-weight:500; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; font-family:inherit; }
+.ctrl-btn.danger { background:#FCEBEB; border-color:#F09595; color:#A32D2D; }
+.ctrl-btn svg { width:13px; height:13px; }
+.dialog-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+.dialog-box { border:0.5px solid #e5e5e2; border-radius:12px; padding:1.25rem; }
+.dialog-lbl { font-size:11px; color:#aaa; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:0.75rem; }
+.dialog-icon { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-bottom:8px; }
+.dialog-title { font-size:14px; font-weight:500; margin-bottom:5px; }
+.dialog-desc { font-size:12px; color:#666; margin-bottom:1rem; line-height:1.5; }
+.dialog-actions { display:flex; gap:8px; justify-content:flex-end; }
+.dialog-actions button { padding:6px 12px; border-radius:7px; font-size:12px; font-weight:500; border:0.5px solid #ddd; background:#f5f5f3; cursor:pointer; font-family:inherit; }
+.btn-blue { background:#185FA5!important; border-color:#185FA5!important; color:white!important; }
+.btn-red { background:#A32D2D!important; border-color:#A32D2D!important; color:white!important; }
+.toast { background:#fff; border:0.5px solid #e5e5e2; border-left:3px solid #639922; border-radius:8px; padding:10px 14px; display:flex; align-items:flex-start; gap:10px; }
+.timeline-item { display:flex; gap:8px; padding:5px 0; font-size:12px; align-items:flex-start; }
+.tl-dot { width:7px; height:7px; border-radius:50%; margin-top:3px; flex-shrink:0; }
+.tl-time { color:#aaa; font-family:monospace; flex-shrink:0; white-space:nowrap; }
+.detail-body { display:grid; grid-template-columns:1fr 1fr; }
+.detail-section { padding:1rem 1.25rem; }
+.detail-section:first-child { border-right:0.5px solid #e5e5e2; }
+.detail-section-title { font-size:11px; color:#aaa; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:0.5rem; }
+.detail-row { display:flex; justify-content:space-between; gap:1rem; padding:4px 0; font-size:12px; border-bottom:0.5px solid #f0f0ee; }
+.detail-row:last-child { border-bottom:none; }
+.detail-row-label { color:#888; }
+.detail-row-value { font-weight:500; text-align:right; }
+.setting-row { display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:0.5px solid #e5e5e2; gap:1rem; }
+.setting-row:last-of-type { border-bottom:none; }
+.setting-label { font-size:13px; }
+.setting-hint { font-size:11px; color:#aaa; margin-top:2px; }
+.map-wrap { background:#f5f5f3; border-radius:10px; padding:1rem; }
+.map-legend { display:flex; align-items:center; gap:16px; margin-bottom:0.75rem; font-size:11px; color:#888; }
+.legend-item { display:flex; align-items:center; gap:5px; }
+.legend-dot { width:10px; height:10px; border-radius:50%; }
+.floor-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+.room { background:#fff; border:0.5px solid #e5e5e2; border-radius:10px; padding:12px 10px; display:flex; flex-direction:column; align-items:center; gap:7px; }
+.room.target { border:1.5px solid #378ADD; background:#EBF4FD; }
+.room-name { font-size:12px; font-weight:500; }
+.room-light { width:12px; height:12px; border-radius:50%; background:#e0e0dd; }
+.room-light.on { background:#378ADD; box-shadow:0 0 6px rgba(55,138,221,0.6); }
+.robot-icon { font-size:10px; background:#378ADD; color:white; border-radius:4px; padding:2px 6px; font-weight:500; }
+.check { width:18px; height:18px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:10px; font-weight:500; }
+.check.yes { background:#EAF3DE; color:#3B6D11; }
+.check.no { background:#FCEBEB; color:#A32D2D; }
+.shelf-header-flex { display:flex; align-items:center; padding:0 0 8px; border-bottom:0.5px solid #e5e5e2; gap:10px; margin-bottom:2px; }
+.shelf-row-flex { display:flex; align-items:center; padding:12px 0; border-bottom:0.5px solid #e5e5e2; gap:10px; }
+.shelf-row-flex:last-child { border-bottom:none; }
+.col-s { width:65px; font-size:13px; font-weight:500; flex-shrink:0; }
+.col-st { width:130px; flex-shrink:0; }
+.col-w { width:55px; font-size:13px; flex-shrink:0; }
+.col-av { width:90px; flex-shrink:0; text-align:center; }
+.col-ac { flex:1; display:flex; gap:6px; justify-content:flex-end; }
+@media print { .page { page-break-after:always; min-height:100vh; } }
+</style>
+</head>
+<body>
+
+<!-- PAGE 1: DASHBOARD -->
+<div class="page">
+  <div class="sidebar">
+    <div class="sidebar-logo">AMR Platform<span>Robot: AMR-01</span></div>
+    <div class="nav-item active"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>Dashboard</div>
+    <div class="nav-item" style="color:#aaa;font-size:13px;"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="6" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>Robot status<span class="admin-badge">Admin</span></div>
+    <div class="nav-item"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/></svg>Create task</div>
+    <div class="nav-item"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12M2 8h8M2 12h10"/></svg>Task history</div>
+    <div class="nav-item"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="1"/><path d="M5 6h6M5 9h4"/></svg>Logs</div>
+    <div class="nav-item"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="2"/><path d="M8 2v2M8 12v2M2 8h2M12 8h2"/></svg>Settings</div>
+    <div class="nav-item"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="5" width="12" height="8" rx="1"/><path d="M5 5V4a3 3 0 016 0v1"/></svg>Shelf management</div>
+  </div>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title">Dashboard</div>
+      <div class="topbar-right">
+        <div class="battery-wrap"><div class="battery-bar"><div class="battery-fill"></div></div>82%</div>
+        <span>AMR-01</span><div class="avatar">AD</div>
+      </div>
+    </div>
+    <div class="content">
+      <div style="display:grid;grid-template-columns:7fr 3fr;gap:1rem;">
+        <div class="card">
+          <div class="card-title">Floor map — AMR-01 location</div>
+          <div class="map-wrap">
+            <div class="map-legend">
+              <div class="legend-item"><div class="legend-dot" style="background:#378ADD;box-shadow:0 0 5px rgba(55,138,221,0.5);"></div>Target room</div>
+              <div class="legend-item"><div class="legend-dot" style="background:#e0e0dd;"></div>Idle</div>
+            </div>
+            <div class="floor-grid">
+              <div class="room"><div class="room-light"></div><div class="room-name">Room 503</div></div>
+              <div class="room"><div class="room-light"></div><div class="room-name">Room 504</div></div>
+              <div class="room"><div class="room-light"></div><div class="room-name">Room 505</div></div>
+              <div class="room target"><div class="room-light on"></div><div class="room-name">Room 601</div><div class="robot-icon">AMR-01</div></div>
+              <div class="room"><div class="room-light"></div><div class="room-name">Room 602</div></div>
+              <div class="room"><div class="room-light"></div><div class="room-name">Meeting 611</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Robot status</div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div class="stat"><div class="stat-label">State</div><div class="stat-value" style="color:#185FA5;">Navigating</div></div>
+            <div class="stat"><div class="stat-label">Target</div><div class="stat-value">Room 601</div></div>
+            <div class="stat"><div class="stat-label">Connection</div><div class="stat-value" style="color:#3B6D11;">Connected</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title" style="margin-bottom:0;">Task queue</div>
+        </div>
+        <table>
+          <thead><tr><th>Task ID</th><th>Pickup</th><th>Destination</th><th>Receiver</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            <tr><td class="task-link">#1042</td><td>Room 601</td><td>Meeting Room 611</td><td>Kevin</td><td><span class="badge running">Running</span></td><td></td></tr>
+            <tr><td class="task-link">#1043</td><td>Room 503</td><td>Room 401</td><td>Alice</td><td><span class="badge waiting">Waiting</span></td><td><button class="btn-cancel">Cancel</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-title">System log</div>
+        <table><tbody>
+          <tr><td style="font-family:monospace;font-size:11px;color:#aaa;width:80px;">10:24:12</td><td><span class="log-badge info">INFO</span></td><td style="padding-left:10px;">Robot moving to destination</td></tr>
+          <tr><td style="font-family:monospace;font-size:11px;color:#aaa;">10:23:48</td><td><span class="log-badge info">INFO</span></td><td style="padding-left:10px;">Arrived at pickup location</td></tr>
+          <tr><td style="font-family:monospace;font-size:11px;color:#aaa;">10:20:11</td><td><span class="log-badge warn">WARN</span></td><td style="padding-left:10px;">Obstacle detected</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 2: ROBOT STATUS (Admin only) -->
+<div class="page">
+  <div class="sidebar">
+    <div class="sidebar-logo">AMR Platform<span>Robot: AMR-01</span></div>
+    <div class="nav-item"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>Dashboard</div>
+    <div class="nav-item active" style="font-size:13px;"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="6" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>Robot status<span class="admin-badge">Admin</span></div>
+    <div class="nav-item"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/></svg>Create task</div>
+    <div class="nav-item"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12M2 8h8M2 12h10"/></svg>Task history</div>
+    <div class="nav-item"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="1"/><path d="M5 6h6M5 9h4"/></svg>Logs</div>
+    <div class="nav-item"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="2"/><path d="M8 2v2M8 12v2M2 8h2M12 8h2"/></svg>Settings</div>
+    <div class="nav-item"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="5" width="12" height="8" rx="1"/><path d="M5 5V4a3 3 0 016 0v1"/></svg>Shelf management</div>
+  </div>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title">Robot status</div>
+      <div class="topbar-right">
+        <div class="battery-wrap"><div class="battery-bar"><div class="battery-fill"></div></div>82%</div>
+        <span>AMR-01</span><div class="avatar">AD</div>
+      </div>
+    </div>
+    <div class="content">
+      <div class="card">
+        <div class="card-title">Robot info — AMR-01</div>
+        <div class="stat-grid">
+          <div class="stat"><div class="stat-label">Current state</div><div class="stat-value" style="color:#185FA5;">Navigating</div></div>
+          <div class="stat"><div class="stat-label">Battery</div><div class="stat-value">82%</div></div>
+          <div class="stat"><div class="stat-label">Speed</div><div class="stat-value">0.7 m/s</div></div>
+          <div class="stat"><div class="stat-label">Current target</div><div class="stat-value">Room 601</div></div>
+          <div class="stat"><div class="stat-label">Last task ID</div><div class="stat-value">#1042</div></div>
+          <div class="stat"><div class="stat-label">Connection</div><div class="stat-value" style="color:#3B6D11;">Connected</div></div>
+        </div>
+        <div style="font-size:11px;color:#aaa;margin-top:8px;">Last updated: 10:24:12</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Controls</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="ctrl-btn"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="3" width="3" height="10" rx="1"/><rect x="9" y="3" width="3" height="10" rx="1"/></svg>Pause robot</button>
+          <button class="ctrl-btn"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="4,3 13,8 4,13"/></svg>Resume</button>
+          <button class="ctrl-btn"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 8A5 5 0 1 1 8 3"/><polyline points="13 3 13 8 8 8"/></svg>Return to standby</button>
+          <button class="ctrl-btn danger"><svg viewBox="0 0 16 16" fill="none" stroke="#A32D2D" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><line x1="8" y1="5" x2="8" y2="9"/></svg>Emergency stop</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Confirmation dialogs</div>
+        <div class="dialog-grid">
+          <div class="dialog-box">
+            <div class="dialog-lbl">Pause robot</div>
+            <div class="dialog-icon" style="background:#E6F1FB;"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#185FA5" stroke-width="1.5"><rect x="4" y="3" width="3" height="10" rx="1"/><rect x="9" y="3" width="3" height="10" rx="1"/></svg></div>
+            <div class="dialog-title">Pause AMR-01?</div>
+            <div class="dialog-desc">Robot will pause at its current position. The current task will be suspended until resumed.</div>
+            <div class="dialog-actions"><button>Cancel</button><button class="btn-blue">Confirm pause</button></div>
+          </div>
+          <div class="dialog-box">
+            <div class="dialog-lbl">Emergency stop</div>
+            <div class="dialog-icon" style="background:#FCEBEB;"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#A32D2D" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><line x1="8" y1="5" x2="8" y2="9"/></svg></div>
+            <div class="dialog-title">Emergency stop AMR-01?</div>
+            <div class="dialog-desc">Robot will stop immediately. All current and queued tasks will be cancelled. Robot will return to standby.</div>
+            <div class="dialog-actions"><button>Cancel</button><button class="btn-red">Yes, emergency stop</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 3: CREATE TASK -->
+<div class="page">
+  <div class="sidebar">
+    <div class="sidebar-logo">AMR Platform<span>Robot: AMR-01</span></div>
+    <div class="nav-item" style="color:#aaa;font-size:13px;"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="6" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>Robot status<span class="admin-badge">Admin</span></div>
+    <div class="nav-item"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>Dashboard</div>
+    <div class="nav-item active"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/></svg>Create task</div>
+    <div class="nav-item"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12M2 8h8M2 12h10"/></svg>Task history</div>
+    <div class="nav-item"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="1"/><path d="M5 6h6M5 9h4"/></svg>Logs</div>
+    <div class="nav-item"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="2"/><path d="M8 2v2M8 12v2M2 8h2M12 8h2"/></svg>Settings</div>
+    <div class="nav-item"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="5" width="12" height="8" rx="1"/><path d="M5 5V4a3 3 0 016 0v1"/></svg>Shelf management</div>
+  </div>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title">Create task</div>
+      <div class="topbar-right">
+        <div class="battery-wrap"><div class="battery-bar"><div class="battery-fill"></div></div>82%</div>
+        <span>AMR-01</span><div class="avatar">AD</div>
+      </div>
+    </div>
+    <div class="content">
+      <div class="card">
+        <div class="card-title">Create delivery task</div>
+        <div class="form-grid">
+          <div class="form-group"><label class="form-label">Pickup location</label><select><option>Room 601</option><option>Room 503</option></select></div>
+          <div class="form-group"><label class="form-label">Destination</label><select><option>Meeting Room 611</option><option>Room 401</option></select></div>
+          <div class="form-group"><label class="form-label">Item description</label><input type="text" value="Documents"/></div>
+          <div class="form-group">
+            <label class="form-label">Shelf layer</label>
+            <select><option>Layer 1 — Active</option><option>Layer 2 — Active</option></select>
+            <div class="form-hint">Layer 3 unavailable (maintenance) · Busy layers not shown</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Verification code</label>
+            <input type="text" value="8421"/>
+            <div class="form-hint">4-digit code — used at pickup AND delivery</div>
+          </div>
+          <div class="form-group"><label class="form-label">Receiver</label><input type="text" placeholder="Enter receiver name..." value="Kevin"/></div>
+        </div>
+        <hr class="divider"/>
+        <div style="display:flex;justify-content:space-between;">
+          <button class="btn-secondary">Reset</button>
+          <button class="btn-primary">Submit task</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Toast notification — after submit</div>
+        <div class="toast">
+          <div style="width:16px;height:16px;border-radius:50%;background:#EAF3DE;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">
+            <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="#3B6D11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,6 5,9 10,3"/></svg>
+          </div>
+          <div><div style="font-size:13px;font-weight:500;">Task #1043 created successfully</div><div style="font-size:12px;color:#888;margin-top:2px;">Status: Added to queue — Robot AMR-01 will handle this task next</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 4: TASK HISTORY -->
+<div class="page">
+  <div class="sidebar">
+    <div class="sidebar-logo">AMR Platform<span>Robot: AMR-01</span></div>
+    <div class="nav-item" style="color:#aaa;font-size:13px;"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="6" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>Robot status<span class="admin-badge">Admin</span></div>
+    <div class="nav-item"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>Dashboard</div>
+    <div class="nav-item"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/></svg>Create task</div>
+    <div class="nav-item active"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12M2 8h8M2 12h10"/></svg>Task history</div>
+    <div class="nav-item"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="1"/><path d="M5 6h6M5 9h4"/></svg>Logs</div>
+    <div class="nav-item"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="2"/><path d="M8 2v2M8 12v2M2 8h2M12 8h2"/></svg>Settings</div>
+    <div class="nav-item"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="5" width="12" height="8" rx="1"/><path d="M5 5V4a3 3 0 016 0v1"/></svg>Shelf management</div>
+  </div>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title">Task history</div>
+      <div class="topbar-right">
+        <div class="battery-wrap"><div class="battery-bar"><div class="battery-fill"></div></div>82%</div>
+        <span>AMR-01</span><div class="avatar">AD</div>
+      </div>
+    </div>
+    <div class="content">
+      <div class="card">
+        <div style="display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap;">
+          <select style="width:auto;padding:6px 10px;"><option>Status: All</option></select>
+          <select style="width:auto;padding:6px 10px;"><option>Date: Today</option></select>
+          <input type="text" placeholder="Search by Task ID..." style="width:180px;padding:6px 10px;"/>
+        </div>
+        <div style="overflow-x:auto;">
+          <table style="min-width:500px;">
+            <thead><tr><th>Task ID</th><th>Pickup</th><th>Destination</th><th>Receiver</th><th>Status</th><th>Created</th><th>Finished</th></tr></thead>
+            <tbody>
+              <tr><td class="task-link">#1042</td><td>Room 601</td><td>Meeting Room 611</td><td>Kevin</td><td><span class="badge done">Done</span></td><td>10:21</td><td>10:25</td></tr>
+              <tr><td class="task-link">#1041</td><td>Room 402</td><td>Room 305</td><td>Alice</td><td><span class="badge done">Done</span></td><td>09:50</td><td>09:55</td></tr>
+              <tr><td class="task-link">#1040</td><td>Room 503</td><td>Room 201</td><td>Bob</td><td><span class="badge failed">Failed</span></td><td>09:10</td><td>09:13</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="font-size:11px;color:#aaa;margin-top:8px;">Click on a Task ID to view full details</div>
+      </div>
+      <div class="card" style="padding:0;overflow:hidden;">
+        <div style="padding:1rem 1.25rem;border-bottom:0.5px solid #e5e5e2;display:flex;align-items:center;justify-content:space-between;">
+          <div style="font-size:14px;font-weight:500;">Task detail — <span style="color:#185FA5;">#1040</span></div>
+          <span class="badge failed">Failed</span>
+        </div>
+        <div class="detail-body">
+          <div class="detail-section">
+            <div class="detail-section-title">Task info</div>
+            <div class="detail-row"><span class="detail-row-label">Pickup</span><span class="detail-row-value">Room 503</span></div>
+            <div class="detail-row"><span class="detail-row-label">Destination</span><span class="detail-row-value">Room 201</span></div>
+            <div class="detail-row"><span class="detail-row-label">Receiver</span><span class="detail-row-value">Bob</span></div>
+            <div class="detail-row"><span class="detail-row-label">Shelf layer</span><span class="detail-row-value">Layer 2</span></div>
+            <div class="detail-row"><span class="detail-row-label">Created</span><span class="detail-row-value">09:10</span></div>
+            <div class="detail-row"><span class="detail-row-label">Finished</span><span class="detail-row-value">09:13</span></div>
+            <div class="detail-row"><span class="detail-row-label">Failure reason</span><span class="detail-row-value" style="color:#A32D2D;">Delivery timeout</span></div>
+          </div>
+          <div class="detail-section">
+            <div class="detail-section-title">Timeline</div>
+            <div class="timeline-item"><div class="tl-dot" style="background:#639922;"></div><span class="tl-time">09:10</span><span style="margin-left:6px;">Task created</span></div>
+            <div class="timeline-item"><div class="tl-dot" style="background:#639922;"></div><span class="tl-time">09:11</span><span style="margin-left:6px;">Navigating to pickup</span></div>
+            <div class="timeline-item"><div class="tl-dot" style="background:#639922;"></div><span class="tl-time">09:11</span><span style="margin-left:6px;">Arrived at pickup</span></div>
+            <div class="timeline-item"><div class="tl-dot" style="background:#639922;"></div><span class="tl-time">09:11</span><span style="margin-left:6px;">Sender verification — passed</span></div>
+            <div class="timeline-item"><div class="tl-dot" style="background:#639922;"></div><span class="tl-time">09:12</span><span style="margin-left:6px;">Navigating to destination</span></div>
+            <div class="timeline-item"><div class="tl-dot" style="background:#E24B4A;"></div><span class="tl-time">09:13</span><span style="margin-left:6px;color:#A32D2D;">Timeout — receiver did not collect</span></div>
+            <div class="detail-section-title" style="margin-top:0.75rem;">Verification log</div>
+            <div class="timeline-item"><div class="tl-dot" style="background:#639922;"></div><span class="tl-time">09:11</span><span style="margin-left:6px;">Pickup — code verified</span></div>
+            <div class="timeline-item"><div class="tl-dot" style="background:#E24B4A;"></div><span class="tl-time">09:13</span><span style="margin-left:6px;color:#A32D2D;">Delivery — no attempt, timed out</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 5: LOGS -->
+<div class="page">
+  <div class="sidebar">
+    <div class="sidebar-logo">AMR Platform<span>Robot: AMR-01</span></div>
+    <div class="nav-item" style="color:#aaa;font-size:13px;"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="6" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>Robot status<span class="admin-badge">Admin</span></div>
+    <div class="nav-item"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>Dashboard</div>
+    <div class="nav-item"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/></svg>Create task</div>
+    <div class="nav-item"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12M2 8h8M2 12h10"/></svg>Task history</div>
+    <div class="nav-item active"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="1"/><path d="M5 6h6M5 9h4"/></svg>Logs</div>
+    <div class="nav-item"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="2"/><path d="M8 2v2M8 12v2M2 8h2M12 8h2"/></svg>Settings</div>
+    <div class="nav-item"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="5" width="12" height="8" rx="1"/><path d="M5 5V4a3 3 0 016 0v1"/></svg>Shelf management</div>
+  </div>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title">Logs</div>
+      <div class="topbar-right">
+        <div class="battery-wrap"><div class="battery-bar"><div class="battery-fill"></div></div>82%</div>
+        <span>AMR-01</span><div class="avatar">AD</div>
+      </div>
+    </div>
+    <div class="content">
+      <div class="card">
+        <div class="card-title">System logs</div>
+        <div style="display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap;">
+          <select style="width:auto;padding:6px 10px;"><option>Robot: All</option><option>AMR-01</option></select>
+          <select style="width:auto;padding:6px 10px;"><option>Date: Today</option></select>
+          <input type="text" placeholder="Search logs..." style="flex:1;min-width:140px;padding:6px 10px;"/>
+        </div>
+        <div style="margin-bottom:1rem;">
+          <span class="pill all">All</span>
+          <span class="pill info">INFO</span>
+          <span class="pill warn">WARNING</span>
+          <span class="pill error">ERROR</span>
+        </div>
+        <table>
+          <thead><tr><th style="width:90px;">Time</th><th style="width:75px;">Level</th><th style="width:70px;">Robot</th><th>Message</th></tr></thead>
+          <tbody>
+            <tr><td style="font-family:monospace;font-size:11px;color:#aaa;">10:24:12</td><td><span class="log-badge info">INFO</span></td><td style="font-size:12px;color:#888;">AMR-01</td><td>Robot moving to destination — task <span class="task-link">#1042</span></td></tr>
+            <tr><td style="font-family:monospace;font-size:11px;color:#aaa;">10:23:48</td><td><span class="log-badge info">INFO</span></td><td style="font-size:12px;color:#888;">AMR-01</td><td>Arrived at pickup — sender verification passed — task <span class="task-link">#1042</span></td></tr>
+            <tr><td style="font-family:monospace;font-size:11px;color:#aaa;">10:22:45</td><td><span class="log-badge info">INFO</span></td><td style="font-size:12px;color:#888;">AMR-01</td><td>Task created — <span class="task-link">#1042</span></td></tr>
+            <tr><td style="font-family:monospace;font-size:11px;color:#aaa;">10:20:11</td><td><span class="log-badge warn">WARN</span></td><td style="font-size:12px;color:#888;">AMR-01</td><td>Obstacle detected near corridor B2</td></tr>
+            <tr><td style="font-family:monospace;font-size:11px;color:#aaa;">09:13:05</td><td><span class="log-badge error">ERROR</span></td><td style="font-size:12px;color:#888;">AMR-01</td><td>Task <span class="task-link">#1040</span> failed — delivery timeout</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 6: SETTINGS -->
+<div class="page">
+  <div class="sidebar">
+    <div class="sidebar-logo">AMR Platform<span>Robot: AMR-01</span></div>
+    <div class="nav-item" style="color:#aaa;font-size:13px;"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="6" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>Robot status<span class="admin-badge">Admin</span></div>
+    <div class="nav-item"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>Dashboard</div>
+    <div class="nav-item"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/></svg>Create task</div>
+    <div class="nav-item"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12M2 8h8M2 12h10"/></svg>Task history</div>
+    <div class="nav-item"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="1"/><path d="M5 6h6M5 9h4"/></svg>Logs</div>
+    <div class="nav-item active"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="2"/><path d="M8 2v2M8 12v2M2 8h2M12 8h2"/></svg>Settings</div>
+    <div class="nav-item"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="5" width="12" height="8" rx="1"/><path d="M5 5V4a3 3 0 016 0v1"/></svg>Shelf management</div>
+  </div>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title">Settings</div>
+      <div class="topbar-right">
+        <div class="battery-wrap"><div class="battery-bar"><div class="battery-fill"></div></div>82%</div>
+        <span>AMR-01</span><div class="avatar">AD</div>
+      </div>
+    </div>
+    <div class="content">
+      <div class="card">
+        <div class="card-title">Robot settings</div>
+        <div class="setting-row"><div><div class="setting-label">Robot name</div></div><input type="text" value="AMR-01" style="width:150px;"/></div>
+        <div class="setting-row"><div><div class="setting-label">Max speed</div></div><input type="text" value="1.2 m/s" style="width:150px;"/></div>
+        <div class="setting-row"><div><div class="setting-label">Battery warning</div><div class="setting-hint">Alert when below this level</div></div><input type="text" value="20%" style="width:150px;"/></div>
+        <div class="setting-row"><div><div class="setting-label">Auto return to standby</div><div class="setting-hint">When no tasks in queue</div></div><div class="toggle"><div class="toggle-knob"></div></div></div>
+        <button class="btn-primary" style="margin-top:1rem;">Save</button>
+      </div>
+      <div class="card">
+        <div class="card-title">System settings</div>
+        <div class="setting-row"><div><div class="setting-label">Pickup timeout</div><div class="setting-hint">Sender must place item and verify within</div></div><input type="text" value="60 sec" style="width:150px;"/></div>
+        <div class="setting-row"><div><div class="setting-label">Delivery pickup timeout</div><div class="setting-hint">Receiver must collect and verify within</div></div><input type="text" value="60 sec" style="width:150px;"/></div>
+        <div class="setting-row"><div><div class="setting-label">Timeout action</div></div><select style="width:150px;"><option>Cancel & return</option><option>Notify admin</option></select></div>
+        <div class="setting-row"><div><div class="setting-label">Language</div></div><select style="width:150px;"><option>English</option><option>繁體中文</option></select></div>
+        <button class="btn-primary" style="margin-top:1rem;">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 7: SHELF MANAGEMENT -->
+<div class="page">
+  <div class="sidebar">
+    <div class="sidebar-logo">AMR Platform<span>Robot: AMR-01</span></div>
+    <div class="nav-item" style="color:#aaa;font-size:13px;"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="6" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>Robot status<span class="admin-badge">Admin</span></div>
+    <div class="nav-item"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>Dashboard</div>
+    <div class="nav-item"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/></svg>Create task</div>
+    <div class="nav-item"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12M2 8h8M2 12h10"/></svg>Task history</div>
+    <div class="nav-item"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="1"/><path d="M5 6h6M5 9h4"/></svg>Logs</div>
+    <div class="nav-item"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="2"/><path d="M8 2v2M8 12v2M2 8h2M12 8h2"/></svg>Settings</div>
+    <div class="nav-item active"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="5" width="12" height="8" rx="1"/><path d="M5 5V4a3 3 0 016 0v1"/></svg>Shelf management</div>
+  </div>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title">Shelf management</div>
+      <div class="topbar-right">
+        <div class="battery-wrap"><div class="battery-bar"><div class="battery-fill"></div></div>82%</div>
+        <span>AMR-01</span><div class="avatar">AD</div>
+      </div>
+    </div>
+    <div class="content">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title" style="margin-bottom:0;">Shelf layers</div>
+          <button class="btn-secondary">+ Add shelf</button>
+        </div>
+        <div class="shelf-header-flex">
+          <div class="col-s"><span style="font-size:11px;color:#aaa;">Shelf</span></div>
+          <div class="col-st"><span style="font-size:11px;color:#aaa;">Status</span></div>
+          <div class="col-w"><span style="font-size:11px;color:#aaa;">Max weight</span></div>
+          <div class="col-av"><span style="font-size:11px;color:#aaa;">In Create Task</span></div>
+          <div class="col-ac"></div>
+        </div>
+        <div class="shelf-row-flex">
+          <div class="col-s">Layer 1</div>
+          <div class="col-st"><span class="badge active"><span class="dot" style="background:#639922;"></span>Active</span></div>
+          <div class="col-w">5 kg</div>
+          <div class="col-av"><span class="check yes">✓</span></div>
+          <div class="col-ac"><button class="btn-edit">Edit</button><button class="btn-maint">Set maintenance</button></div>
+        </div>
+        <div class="shelf-row-flex">
+          <div class="col-s">Layer 2</div>
+          <div class="col-st"><span class="badge busy"><span class="dot" style="background:#A32D2D;"></span>Busy</span></div>
+          <div class="col-w">5 kg</div>
+          <div class="col-av"><span class="check no">✗</span></div>
+          <div class="col-ac"><span style="font-size:11px;color:#aaa;padding:4px 10px;">In use by #1042</span></div>
+        </div>
+        <div class="shelf-row-flex">
+          <div class="col-s">Layer 3</div>
+          <div class="col-st"><span class="badge maintenance"><span class="dot" style="background:#EF9F27;"></span>Maintenance</span></div>
+          <div class="col-w">5 kg</div>
+          <div class="col-av"><span class="check no">✗</span></div>
+          <div class="col-ac"><button class="btn-edit">Edit</button><button class="btn-activate">Set active</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
