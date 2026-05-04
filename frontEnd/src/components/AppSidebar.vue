@@ -12,7 +12,7 @@
         <rect x="1" y="9" width="6" height="6" rx="1"/>
         <rect x="9" y="9" width="6" height="6" rx="1"/>
       </svg>
-      Dashboard
+      {{ t('nav.dashboard') }}
     </RouterLink>
 
     <RouterLink v-if="isAdmin" class="nav-item" to="/robot-status" style="font-size:13px;">
@@ -20,8 +20,8 @@
         <circle cx="8" cy="6" r="3"/>
         <path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/>
       </svg>
-      Robot status
-      <span class="admin-badge">Admin</span>
+      {{ t('nav.robotStatus') }}
+      <span class="admin-badge">{{ t('nav.admin') }}</span>
     </RouterLink>
 
     <RouterLink class="nav-item" to="/create-task">
@@ -29,14 +29,14 @@
         <circle cx="8" cy="8" r="6"/>
         <path d="M8 5v3l2 2"/>
       </svg>
-      Create task
+      {{ t('nav.createTask') }}
     </RouterLink>
 
     <RouterLink class="nav-item" to="/task-history">
       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
         <path d="M2 4h12M2 8h8M2 12h10"/>
       </svg>
-      Task history
+      {{ t('nav.taskHistory') }}
     </RouterLink>
 
     <RouterLink class="nav-item" to="/logs">
@@ -44,7 +44,7 @@
         <rect x="2" y="2" width="12" height="12" rx="1"/>
         <path d="M5 6h6M5 9h4"/>
       </svg>
-      Logs
+      {{ t('nav.logs') }}
     </RouterLink>
 
     <RouterLink class="nav-item" to="/settings">
@@ -52,7 +52,7 @@
         <circle cx="8" cy="8" r="2"/>
         <path d="M8 2v2M8 12v2M2 8h2M12 8h2"/>
       </svg>
-      Settings
+      {{ t('nav.settings') }}
     </RouterLink>
 
     <RouterLink class="nav-item" to="/shelf-management">
@@ -60,7 +60,7 @@
         <rect x="2" y="5" width="12" height="8" rx="1"/>
         <path d="M5 5V4a3 3 0 016 0v1"/>
       </svg>
-      Shelf management
+      {{ t('nav.shelfManagement') }}
     </RouterLink>
 
     <RouterLink v-if="isAdmin" class="nav-item" to="/users">
@@ -70,8 +70,8 @@
         <circle cx="12" cy="7" r="2"/>
         <path d="M10 13c0-1.7 1-3 2-3s2 1.3 2 3"/>
       </svg>
-      User management
-      <span class="admin-badge">Admin</span>
+      {{ t('nav.userManagement') }}
+      <span class="admin-badge">{{ t('nav.admin') }}</span>
     </RouterLink>
   </div>
 </template>
@@ -79,7 +79,9 @@
 <script setup>
 import { computed } from 'vue'
 import { useAuth } from '../composables/useAuth'
+import { useI18n } from '../composables/useI18n'
 
 const { user } = useAuth()
+const { t } = useI18n()
 const isAdmin = computed(() => user.value?.role === 'admin')
 </script>

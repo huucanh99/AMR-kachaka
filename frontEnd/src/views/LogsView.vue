@@ -1,30 +1,30 @@
 <template>
   <div class="content">
     <div class="card">
-      <div class="card-title">System logs</div>
+      <div class="card-title">{{ t('logs.title') }}</div>
       <div style="display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap;">
         <select v-model="filterRobot" style="width:auto;padding:6px 10px;">
-          <option value="">Robot: All</option>
+          <option value="">{{ t('logs.robotAll') }}</option>
           <option value="AMR-01">AMR-01</option>
         </select>
-        <input type="text" v-model="searchQuery" placeholder="Search logs..." style="flex:1;min-width:140px;padding:6px 10px;" />
+        <input type="text" v-model="searchQuery" :placeholder="t('logs.searchPlaceholder')" style="flex:1;min-width:140px;padding:6px 10px;" />
       </div>
       <div style="margin-bottom:1rem;">
-        <span class="pill all" :class="{ 'active-filter': activeLevel === '' }" @click="setLevel('')">All</span>
-        <span class="pill info" :class="{ 'active-filter': activeLevel === 'INFO' }" @click="setLevel('INFO')">INFO</span>
-        <span class="pill warn" :class="{ 'active-filter': activeLevel === 'WARN' }" @click="setLevel('WARN')">WARNING</span>
+        <span class="pill all" :class="{ 'active-filter': activeLevel === '' }" @click="setLevel('')">{{ t('logs.all') }}</span>
+        <span class="pill info"  :class="{ 'active-filter': activeLevel === 'INFO' }"  @click="setLevel('INFO')">INFO</span>
+        <span class="pill warn"  :class="{ 'active-filter': activeLevel === 'WARN' }"  @click="setLevel('WARN')">WARNING</span>
         <span class="pill error" :class="{ 'active-filter': activeLevel === 'ERROR' }" @click="setLevel('ERROR')">ERROR</span>
       </div>
 
-      <div v-if="loading" style="color:#888;padding:1rem 0;">Loading logs...</div>
+      <div v-if="loading" style="color:#888;padding:1rem 0;">{{ t('common.loading') }}</div>
       <div v-else-if="error" style="color:#e57373;padding:1rem 0;">{{ error }}</div>
       <table v-else>
         <thead>
           <tr>
-            <th style="width:140px;">Time</th>
-            <th style="width:75px;">Level</th>
-            <th style="width:70px;">Robot</th>
-            <th>Message</th>
+            <th style="width:140px;">{{ t('logs.time') }}</th>
+            <th style="width:75px;">{{ t('logs.level') }}</th>
+            <th style="width:70px;">{{ t('logs.robot') }}</th>
+            <th>{{ t('logs.message') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -41,7 +41,7 @@
             </td>
           </tr>
           <tr v-if="filteredLogs.length === 0">
-            <td colspan="4" style="text-align:center;color:#888;padding:1rem;">No logs found</td>
+            <td colspan="4" style="text-align:center;color:#888;padding:1rem;">{{ t('logs.noLogs') }}</td>
           </tr>
         </tbody>
       </table>
@@ -53,6 +53,9 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { getLogs } from '../api/logs'
 import socket from '../socket'
+import { useI18n } from '../composables/useI18n'
+
+const { t } = useI18n()
 
 const filterRobot = ref('')
 const searchQuery = ref('')
@@ -69,7 +72,7 @@ async function fetchLogs() {
     const res = await getLogs({ ...params, limit: 100 })
     logs.value = res.data.data.logs
   } catch (err) {
-    error.value = 'Failed to load logs'
+    error.value = t('logs.loadFailed')
     console.error(err)
   } finally {
     loading.value = false

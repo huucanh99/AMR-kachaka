@@ -5,22 +5,22 @@
         <span class="auth-logo-icon">🤖</span>
         <span class="auth-logo-text">Kachaka AMR</span>
       </div>
-      <h2 class="auth-title">Sign in</h2>
+      <h2 class="auth-title">{{ t('login.title') }}</h2>
 
       <form @submit.prevent="submit">
         <div class="form-group">
-          <label>Email</label>
-          <input v-model="form.email" type="email" placeholder="you@example.com" required autocomplete="email" />
+          <label>{{ t('login.username') }}</label>
+          <input v-model="form.username" type="text" :placeholder="t('login.username')" required autocomplete="username" />
         </div>
         <div class="form-group">
-          <label>Password</label>
+          <label>{{ t('login.password') }}</label>
           <input v-model="form.password" type="password" placeholder="••••••••" required autocomplete="current-password" />
         </div>
 
         <div v-if="error" class="auth-error">{{ error }}</div>
 
         <button type="submit" class="btn-primary auth-submit" :disabled="loading">
-          {{ loading ? 'Signing in...' : 'Sign in' }}
+          {{ loading ? t('login.submitting') : t('login.submit') }}
         </button>
       </form>
 
@@ -33,11 +33,13 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { login } from '../api/auth'
 import { useAuth } from '../composables/useAuth'
+import { useI18n } from '../composables/useI18n'
 
 const router = useRouter()
 const { setAuth } = useAuth()
+const { t } = useI18n()
 
-const form    = ref({ email: '', password: '' })
+const form    = ref({ username: '', password: '' })
 const loading = ref(false)
 const error   = ref(null)
 
@@ -49,7 +51,7 @@ async function submit() {
     setAuth(res.data.data)
     router.push('/')
   } catch (err) {
-    error.value = err.response?.data?.error || 'Login failed'
+    error.value = err.response?.data?.error || t('login.failed')
   } finally {
     loading.value = false
   }
@@ -86,9 +88,7 @@ async function submit() {
   color: #fff;
   margin: 0 0 1.5rem;
 }
-.form-group {
-  margin-bottom: 1rem;
-}
+.form-group { margin-bottom: 1rem; }
 .form-group label {
   display: block;
   font-size: 0.82rem;
@@ -98,8 +98,8 @@ async function submit() {
 .form-group input {
   width: 100%;
   padding: 9px 12px;
-  background: #0f1117;
-  border: 1px solid #2a2d3e;
+  background: #252836;
+  border: 1px solid #3d4166;
   border-radius: 6px;
   color: #e0e0e0;
   font-size: 0.9rem;
@@ -124,15 +124,4 @@ async function submit() {
   margin-top: 0.5rem;
   font-size: 0.95rem;
 }
-.auth-switch {
-  margin-top: 1.2rem;
-  text-align: center;
-  font-size: 0.85rem;
-  color: #888;
-}
-.auth-switch a {
-  color: #4f8ef7;
-  text-decoration: none;
-}
-.auth-switch a:hover { text-decoration: underline; }
 </style>

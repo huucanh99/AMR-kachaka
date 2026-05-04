@@ -1,7 +1,7 @@
 'use strict';
 
-const robotService   = require('../services/robotService');
-const taskService    = require('../services/taskService');
+const robotService    = require('../services/robotService');
+const taskService     = require('../services/taskService');
 const settingsService = require('../services/settingsService');
 
 const STATUS_INTERVAL_MS = 500; // broadcast every 0.5 second
@@ -19,6 +19,10 @@ const runner = {
   //   'at_destination'        – robot arrived, waiting for receiver verification
   phase:               null,
   prevCommandState:    null,
+  prevCommandId:       null,  // commandId seen on the previous status tick
+  commandId:           null,  // commandId of the last move command WE issued
+  watchdogTicks:       0,     // consecutive ticks where commandId doesn't match ours
+  paused:              false, // true while task is paused (robot stopped mid-task)
   pickupTimeoutHandle:   null,
   deliveryTimeoutHandle: null,
   // Cached task data needed across phases
@@ -29,6 +33,15 @@ const runner = {
 
 // Module-level io reference (set by initSocket)
 let _io = null;
+
+// ---------------------------------------------------------------------------
+// Public query helpers
+// ---------------------------------------------------------------------------
+
+/** Returns true when a task is being driven by the runner. */
+function isTaskActive() {
+  return runner.taskId !== null;
+}
 
 // ---------------------------------------------------------------------------
 // Public callbacks — called by the tasks route after successful verification
@@ -43,8 +56,9 @@ function onPickupVerified(taskId) {
 
   console.log(`[TaskRunner] Task #${taskId} → pickup verified, moving to destination`);
 
-  robotService.moveToLocation(runner.destinationId).then(() => {
-    runner.phase = 'going_to_destination';
+  robotService.moveToLocation(runner.destinationId).then((result) => {
+    runner.commandId = result.commandId;
+    runner.phase     = 'going_to_destination';
     _io.emit('task:updated', { taskId, status: 'in_progress', phase: 'going_to_destination' });
     console.log(`[TaskRunner] Task #${taskId} → moving to destination (${runner.destinationId})`);
   }).catch(err => {
@@ -99,8 +113,16 @@ function initSocket(io) {
 
     // -----------------------------------------------------------------------
     // Robot control events (triggered from the UI)
+    // move / dock / undock / return-home are blocked while a task is active.
+    // pause / resume / emergency-stop are always allowed.
     // -----------------------------------------------------------------------
+
     socket.on('robot:move', async ({ locationId, ttsOnSuccess }) => {
+      if (runner.taskId !== null) {
+        return socket.emit('error', {
+          message: 'A task is currently in progress. Use pause or emergency stop to interrupt.',
+        });
+      }
       try {
         if (!locationId) return socket.emit('error', { message: 'locationId is required' });
         const result = await robotService.moveToLocation(locationId, { ttsOnSuccess });
@@ -111,18 +133,28 @@ function initSocket(io) {
     });
 
     socket.on('robot:pause', async () => {
+      // Set paused flag BEFORE the async cancel so the status loop can't
+      // misfire handleArrival on the RUNNING→PENDING transition caused by the cancel.
+      if (runner.taskId) runner.paused = true;
       try {
         const result = await robotService.pauseRobot();
         io.emit('robot:paused', result);
       } catch (err) {
+        if (runner.taskId) runner.paused = false; // revert on failure
         socket.emit('error', { message: err.message });
       }
     });
 
     socket.on('robot:resume', async () => {
       try {
-        const result = await robotService.resumeRobot();
-        io.emit('robot:command_started', { commandId: result.commandId, resumed: true });
+        if (runner.taskId && runner.paused) {
+          // Task-runner managed pause — re-issue the appropriate move command
+          const data = await resumeRunner();
+          io.emit('robot:command_started', { commandId: data.commandId, resumed: true });
+        } else {
+          const result = await robotService.resumeRobot();
+          io.emit('robot:command_started', { commandId: result.commandId, resumed: true });
+        }
       } catch (err) {
         socket.emit('error', { message: err.message });
       }
@@ -131,6 +163,12 @@ function initSocket(io) {
     socket.on('robot:emergency_stop', async () => {
       try {
         await robotService.emergencyStop();
+        // Emergency stop aborts the current task
+        if (runner.taskId) {
+          const taskId = runner.taskId;
+          resetRunner();
+          io.emit('task:cancelled', { taskId, reason: 'emergency_stop' });
+        }
         io.emit('robot:emergency_stop', {});
       } catch (err) {
         socket.emit('error', { message: err.message });
@@ -147,7 +185,7 @@ function initSocket(io) {
   });
 
   // -------------------------------------------------------------------------
-  // Main loop — every 1 second
+  // Main loop — every 0.5 seconds
   // -------------------------------------------------------------------------
   setInterval(async () => {
     if (io.engine.clientsCount === 0) return;
@@ -160,6 +198,7 @@ function initSocket(io) {
         runner: {
           taskId:           runner.taskId,
           phase:            runner.phase,
+          paused:           runner.paused,
           pickupLocationId: runner.pickupLocationId,
           destinationId:    runner.destinationId,
         },
@@ -182,6 +221,7 @@ function initSocket(io) {
 
 async function runTaskMachine(io, status) {
   const commandState = status.command?.state;
+  const commandId    = status.command?.commandId;
 
   // If no active task and robot is idle, look for the next waiting task
   if (!runner.taskId && commandState === 'COMMAND_STATE_PENDING') {
@@ -191,29 +231,71 @@ async function runTaskMachine(io, status) {
     }
   }
 
-  // Detect arrival: RUNNING → PENDING while we have an active task
-  // Only trigger on phases where we are actively moving the robot
   const movingPhases = ['going_to_pickup', 'going_to_destination'];
+
+  // Watchdog: if in a moving phase (not paused) and the current command on
+  // the robot no longer matches the one we issued, someone replaced it.
+  // After a grace period we re-issue our move command.
   if (
     runner.taskId &&
     movingPhases.includes(runner.phase) &&
+    !runner.paused &&
+    runner.commandId &&
+    commandId !== runner.commandId
+  ) {
+    runner.watchdogTicks++;
+    if (runner.watchdogTicks >= 4) {
+      const locationId = runner.phase === 'going_to_destination'
+        ? runner.destinationId
+        : runner.pickupLocationId;
+      console.warn(
+        `[TaskRunner] Task #${runner.taskId} — command replaced ` +
+        `(expected ${runner.commandId}, got ${commandId}), re-issuing move to ${locationId}`
+      );
+      try {
+        const result = await robotService.moveToLocation(locationId);
+        runner.commandId     = result.commandId;
+        runner.watchdogTicks = 0;
+      } catch (err) {
+        console.error('[TaskRunner] Watchdog re-issue failed:', err.message);
+      }
+    }
+  } else {
+    runner.watchdogTicks = 0;
+  }
+
+  // Arrival detection: RUNNING → PENDING transition while in a moving phase.
+  // Extra guards:
+  //   - not paused (pause cancels the command, causing a spurious RUNNING→PENDING)
+  //   - the command that just completed was the one WE issued (not a rogue command)
+  const ourCommandCompleted =
+    !runner.commandId ||
+    (runner.prevCommandId === runner.commandId && commandId === runner.commandId);
+
+  if (
+    runner.taskId &&
+    movingPhases.includes(runner.phase) &&
+    !runner.paused &&
     runner.prevCommandState === 'COMMAND_STATE_RUNNING' &&
-    commandState           === 'COMMAND_STATE_PENDING'
+    commandState            === 'COMMAND_STATE_PENDING' &&
+    ourCommandCompleted
   ) {
     await handleArrival(io);
   }
 
   runner.prevCommandState = commandState;
+  runner.prevCommandId    = commandId;
 }
 
 /** Dispatch the robot to the pickup location and mark the task in_progress. */
 async function startPickup(io, task) {
   try {
     await taskService.updateTaskStatus(task.id, 'in_progress', 'Robot dispatched to pickup');
-    await robotService.moveToLocation(task.pickup_location_id);
+    const { commandId } = await robotService.moveToLocation(task.pickup_location_id);
 
     runner.taskId            = task.id;
     runner.phase             = 'going_to_pickup';
+    runner.commandId         = commandId;
     runner.destinationId     = task.destination_id;
     runner.pickupLocationId  = task.pickup_location_id;
 
@@ -235,15 +317,15 @@ async function handleArrival(io) {
 
   try {
     if (phase === 'going_to_pickup') {
-      // Fetch task to check if shelf is required
       const task = await taskService.getTaskById(taskId);
       const needsVerification = !!task.shelf_id;
 
       if (!needsVerification) {
         // No shelf — skip pickup verification, go straight to destination
         console.log(`[TaskRunner] Task #${taskId} → arrived at pickup (no shelf), moving to destination`);
-        await robotService.moveToLocation(runner.destinationId);
-        runner.phase = 'going_to_destination';
+        const { commandId } = await robotService.moveToLocation(runner.destinationId);
+        runner.commandId = commandId;
+        runner.phase     = 'going_to_destination';
         io.emit('task:updated', { taskId, status: 'in_progress', phase: 'going_to_destination' });
         return;
       }
@@ -303,16 +385,13 @@ async function startPickupTimeout(io, taskId) {
   console.log(`[TaskRunner] Pickup timeout set: ${pickupTimeoutSeconds}s for task #${taskId}`);
 
   runner.pickupTimeoutHandle = setTimeout(async () => {
-    // Guard: another task may have started, or verification already happened
     if (runner.taskId !== taskId || runner.phase !== 'at_pickup') return;
 
     console.warn(`[TaskRunner] Pickup timeout fired for task #${taskId} — cancelling`);
 
     try {
-      // Cancel task in DB
       await taskService.updateTaskStatus(taskId, 'cancelled', 'Pickup timeout — sender did not verify');
 
-      // Notify sender
       io.to(`task:${taskId}:sender`).emit('notification', {
         type:    'pickup_timeout',
         taskId,
@@ -339,7 +418,6 @@ async function startDeliveryTimeout(io, taskId) {
   console.log(`[TaskRunner] Delivery timeout set: ${deliveryTimeoutSeconds}s for task #${taskId}`);
 
   runner.deliveryTimeoutHandle = setTimeout(async () => {
-    // Guard: verification may have already happened
     if (runner.taskId !== taskId || runner.phase !== 'at_destination') return;
 
     console.warn(`[TaskRunner] Delivery timeout fired for task #${taskId} — alerting admin`);
@@ -374,6 +452,10 @@ function resetRunner() {
   clearTimeout(runner.deliveryTimeoutHandle);
   runner.taskId              = null;
   runner.phase               = null;
+  runner.commandId           = null;
+  runner.prevCommandId       = null;
+  runner.watchdogTicks       = 0;
+  runner.paused              = false;
   runner.destinationId       = null;
   runner.pickupLocationId    = null;
   runner.pickupTimeoutHandle   = null;
@@ -389,6 +471,7 @@ async function pushStatus(socket) {
       runner: {
         taskId:           runner.taskId,
         phase:            runner.phase,
+        paused:           runner.paused,
         pickupLocationId: runner.pickupLocationId,
         destinationId:    runner.destinationId,
       },
@@ -399,13 +482,41 @@ async function pushStatus(socket) {
 }
 
 // ---------------------------------------------------------------------------
+// resumeRunner — re-issue move command after a task-runner pause
+// ---------------------------------------------------------------------------
+
+async function resumeRunner() {
+  if (!runner.taskId) {
+    throw Object.assign(new Error('No active task to resume'), { httpStatus: 409 });
+  }
+  if (!runner.paused) {
+    throw Object.assign(new Error('Task runner is not paused'), { httpStatus: 409 });
+  }
+
+  const locationId = runner.phase === 'going_to_destination'
+    ? runner.destinationId
+    : runner.pickupLocationId;
+
+  const result = await robotService.moveToLocation(locationId);
+  runner.commandId     = result.commandId;
+  runner.watchdogTicks = 0;
+  runner.paused        = false;
+
+  if (_io) {
+    _io.emit('task:updated', { taskId: runner.taskId, status: 'in_progress', phase: runner.phase });
+  }
+
+  console.log(`[TaskRunner] Task #${runner.taskId} → resumed, re-issued move (phase: ${runner.phase})`);
+  return { commandId: result.commandId, taskId: runner.taskId, phase: runner.phase };
+}
+
+// ---------------------------------------------------------------------------
 // Resume a stuck in_progress task — re-issues the move command
 // ---------------------------------------------------------------------------
 
 async function resumeTask(taskId) {
   const id = Number(taskId);
 
-  // If runner is busy with a different task, reject
   if (runner.taskId && runner.taskId !== id) {
     const err = new Error('Another task is currently being executed by the runner');
     err.httpStatus = 409;
@@ -420,20 +531,22 @@ async function resumeTask(taskId) {
     throw err;
   }
 
-  // Re-adopt into runner
   runner.taskId           = id;
   runner.destinationId    = task.destination_id;
   runner.pickupLocationId = task.pickup_location_id;
+  runner.paused           = false;
 
   const goToDestination = !!task.pickup_verified_at;
 
   if (goToDestination) {
-    await robotService.moveToLocation(task.destination_id);
-    runner.phase = 'going_to_destination';
+    const result = await robotService.moveToLocation(task.destination_id);
+    runner.commandId = result.commandId;
+    runner.phase     = 'going_to_destination';
     console.log(`[TaskRunner] Task #${id} → resumed, moving to destination (${task.destination_id})`);
   } else {
-    await robotService.moveToLocation(task.pickup_location_id);
-    runner.phase = 'going_to_pickup';
+    const result = await robotService.moveToLocation(task.pickup_location_id);
+    runner.commandId = result.commandId;
+    runner.phase     = 'going_to_pickup';
     console.log(`[TaskRunner] Task #${id} → resumed, moving to pickup (${task.pickup_location_id})`);
   }
 
@@ -444,4 +557,4 @@ async function resumeTask(taskId) {
   return { taskId: id, phase: runner.phase };
 }
 
-module.exports = { initSocket, onPickupVerified, onDeliveryVerified, resumeTask };
+module.exports = { initSocket, onPickupVerified, onDeliveryVerified, resumeTask, isTaskActive, resumeRunner };

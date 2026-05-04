@@ -1,50 +1,50 @@
 <template>
   <div class="content">
     <div class="card">
-      <div class="card-title">Create delivery task</div>
+      <div class="card-title">{{ t('createTask.title') }}</div>
 
-      <div v-if="loadingInit" style="color:#aaa;font-size:13px;padding:8px 0;">Loading locations…</div>
+      <div v-if="loadingInit" style="color:#aaa;font-size:13px;padding:8px 0;">{{ t('createTask.loadingLocations') }}</div>
 
       <div v-else class="form-grid">
         <div class="form-group">
-          <label class="form-label">Pickup location</label>
+          <label class="form-label">{{ t('createTask.pickupLocation') }}</label>
           <select v-model="form.pickupLocationId">
             <option v-for="loc in locations" :key="loc.id" :value="loc.id">{{ loc.name }}</option>
           </select>
         </div>
         <div class="form-group">
-          <label class="form-label">Destination</label>
+          <label class="form-label">{{ t('createTask.destination') }}</label>
           <select v-model="form.destinationId">
             <option v-for="loc in locations" :key="loc.id" :value="loc.id">{{ loc.name }}</option>
           </select>
         </div>
         <div class="form-group">
-          <label class="form-label">Shelf layer</label>
+          <label class="form-label">{{ t('createTask.shelfLayer') }}</label>
           <div v-if="hasShelfOn" style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
             <span style="font-size:11px;background:#EAF3DE;color:#3B6D11;border-radius:99px;padding:2px 8px;font-weight:500;">
-              Robot is carrying a shelf
+              {{ t('createTask.hasShelf') }}
             </span>
           </div>
           <div v-else style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
             <span style="font-size:11px;background:#f0f0ee;color:#888;border-radius:99px;padding:2px 8px;">
-              No shelf on robot
+              {{ t('createTask.noShelfBadge') }}
             </span>
           </div>
           <select v-model="form.shelfLayer" :disabled="!hasShelfOn">
-            <option v-if="!hasShelfOn" value="">No shelf</option>
-            <option v-for="l in availLayers" :key="l.layer" :value="l.layer">Layer {{ l.layer }} — Active</option>
+            <option v-if="!hasShelfOn" value="">{{ t('common.noShelf') }}</option>
+            <option v-for="l in availLayers" :key="l.layer" :value="l.layer">{{ t('createTask.layerActive', { n: l.layer }) }}</option>
           </select>
-          <div v-if="!hasShelfOn" class="form-hint" style="color:#A32D2D;">Robot is not carrying a shelf — shelf layer unavailable</div>
-          <div v-else class="form-hint">Only active layers shown · Busy layers hidden</div>
+          <div v-if="!hasShelfOn" class="form-hint" style="color:#A32D2D;">{{ t('createTask.noShelfHint') }}</div>
+          <div v-else class="form-hint">{{ t('createTask.activeLayersOnly') }}</div>
         </div>
         <div class="form-group">
-          <label class="form-label">Verification code{{ form.shelfLayer ? '' : ' (optional)' }}</label>
-          <input type="text" v-model="form.verificationCode" :placeholder="form.shelfLayer ? 'Min 4 characters' : 'Not required for no-shelf task'" />
-          <div v-if="form.shelfLayer" class="form-hint">Used at pickup (sender) AND delivery (receiver)</div>
+          <label class="form-label">{{ t('createTask.verificationCode') }}{{ form.shelfLayer ? '' : ' ' + t('createTask.optional') }}</label>
+          <input type="text" v-model="form.verificationCode" :placeholder="form.shelfLayer ? t('createTask.codeMin4') : t('createTask.codeNotRequired')" />
+          <div v-if="form.shelfLayer" class="form-hint">{{ t('createTask.codeHint') }}</div>
         </div>
         <div class="form-group">
-          <label class="form-label">Receiver</label>
-          <input type="text" v-model="form.receiverName" placeholder="Enter receiver name…" />
+          <label class="form-label">{{ t('createTask.receiver') }}</label>
+          <input type="text" v-model="form.receiverName" :placeholder="t('createTask.receiverPlaceholder')" />
         </div>
       </div>
 
@@ -52,9 +52,9 @@
 
       <hr class="divider" />
       <div style="display:flex;justify-content:space-between;">
-        <button class="btn-secondary" @click="resetForm">Reset</button>
+        <button class="btn-secondary" @click="resetForm">{{ t('createTask.reset') }}</button>
         <button class="btn-primary" :disabled="loading || loadingInit" @click="submitTask">
-          {{ loading ? 'Submitting…' : 'Submit task' }}
+          {{ loading ? t('createTask.submitting') : t('createTask.submit') }}
         </button>
       </div>
     </div>
@@ -67,8 +67,8 @@
         </svg>
       </div>
       <div>
-        <div style="font-size:13px;font-weight:500;">Task #{{ lastTaskId }} created successfully</div>
-        <div style="font-size:12px;color:#888;margin-top:2px;">Status: Added to queue — Robot AMR-01 will handle this task next</div>
+        <div style="font-size:13px;font-weight:500;">{{ t('createTask.successTitle', { id: lastTaskId }) }}</div>
+        <div style="font-size:12px;color:#888;margin-top:2px;">{{ t('createTask.successMsg') }}</div>
       </div>
     </div>
   </div>
@@ -78,6 +78,9 @@
 import { ref, onMounted } from 'vue'
 import { getLocations, getShelfLayers, getMovingShelf } from '../api/robot'
 import { createTask } from '../api/tasks'
+import { useI18n } from '../composables/useI18n'
+
+const { t } = useI18n()
 
 const SHELF_ID = 'shelf-001'
 

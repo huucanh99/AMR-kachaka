@@ -4,14 +4,27 @@ const { Router } = require('express');
 const { call, getRequest } = require('../grpc/kachakaClient');
 const robotService = require('../services/robotService');
 const { pool } = require('../config/db');
+const { isTaskActive, resumeRunner } = require('../socket/robotSocket');
 
 const router = Router();
 
 // Helper: send a clean error response
 function handleError(res, err) {
   console.error('[Route]', err.message);
-  const status = err.code === 'NO_PAUSED_TASK' ? 409 : 500;
+  const status = err.httpStatus || (err.code === 'NO_PAUSED_TASK' ? 409 : 500);
   res.status(status).json({ success: false, error: err.message });
+}
+
+// Reject the request if a task is currently being driven by the runner.
+function blockIfTaskActive(res) {
+  if (isTaskActive()) {
+    res.status(409).json({
+      success: false,
+      error: 'A task is currently in progress. Use /api/robot/pause to interrupt.',
+    });
+    return true;
+  }
+  return false;
 }
 
 // ---------------------------------------------------------------------------
@@ -103,6 +116,7 @@ router.get('/shelves', async (req, res) => {
  * Body: { locationId: string, ttsOnSuccess?: string }
  */
 router.post('/move', async (req, res) => {
+  if (blockIfTaskActive(res)) return;
   try {
     const { locationId, ttsOnSuccess } = req.body;
     if (!locationId) return res.status(400).json({ success: false, error: 'locationId is required' });
@@ -128,6 +142,12 @@ router.post('/pause', async (req, res) => {
 /** POST /api/robot/resume */
 router.post('/resume', async (req, res) => {
   try {
+    if (isTaskActive()) {
+      // Task-runner managed pause — re-issue the current phase's move command
+      const data = await resumeRunner();
+      req.io.emit('robot:command_started', { commandId: data.commandId, resumed: true });
+      return res.json({ success: true, data });
+    }
     const result = await robotService.resumeRobot();
     req.io.emit('robot:command_started', { commandId: result.commandId, resumed: true });
     res.json({ success: true, data: result });
@@ -145,6 +165,7 @@ router.post('/emergency-stop', async (req, res) => {
 
 /** POST /api/robot/dock-shelf */
 router.post('/dock-shelf', async (req, res) => {
+  if (blockIfTaskActive(res)) return;
   try {
     const data = await call('StartCommand', {
       command: { dock_shelf_command: {} },
@@ -160,6 +181,7 @@ router.post('/dock-shelf', async (req, res) => {
 
 /** POST /api/robot/undock-shelf */
 router.post('/undock-shelf', async (req, res) => {
+  if (blockIfTaskActive(res)) return;
   try {
     const data = await call('StartCommand', {
       command: { undock_shelf_command: {} },
@@ -175,6 +197,7 @@ router.post('/undock-shelf', async (req, res) => {
 
 /** POST /api/robot/return-home */
 router.post('/return-home', async (req, res) => {
+  if (blockIfTaskActive(res)) return;
   try {
     const data = await call('StartCommand', {
       command: { return_home_command: {} },
@@ -190,6 +213,7 @@ router.post('/return-home', async (req, res) => {
 
 /** POST /api/robot/cancel */
 router.post('/cancel', async (req, res) => {
+  if (blockIfTaskActive(res)) return;
   try {
     const data = await call('CancelCommand', {});
     req.io.emit('robot:command_cancelled', {});

@@ -15,8 +15,8 @@ function makeError(message, httpStatus, code) {
 }
 
 async function register({ username, email, password, role = 'operator' }) {
-  if (!username?.trim() || !email?.trim() || !password?.trim()) {
-    throw makeError('username, email and password are required', 400);
+  if (!username?.trim() || !password?.trim()) {
+    throw makeError('username and password are required', 400);
   }
   if (password.length < 6) {
     throw makeError('Password must be at least 6 characters', 400);
@@ -34,7 +34,7 @@ async function register({ username, email, password, role = 'operator' }) {
       `INSERT INTO users (username, email, password, role)
        VALUES ($1, $2, $3, $4)
        RETURNING id, username, email, role, created_at`,
-      [username.trim(), email.trim().toLowerCase(), hashed, role]
+      [username.trim(), email ? email.trim().toLowerCase() : null, hashed, role]
     ));
   } catch (err) {
     if (err.message?.includes('UNIQUE')) {
@@ -46,21 +46,21 @@ async function register({ username, email, password, role = 'operator' }) {
   return rows[0];
 }
 
-async function login({ email, password }) {
-  if (!email?.trim() || !password?.trim()) {
-    throw makeError('email and password are required', 400);
+async function login({ username, password }) {
+  if (!username?.trim() || !password?.trim()) {
+    throw makeError('username and password are required', 400);
   }
 
   const { rows } = await pool.query(
-    'SELECT * FROM users WHERE email = $1',
-    [email.trim().toLowerCase()]
+    'SELECT * FROM users WHERE username = $1',
+    [username.trim()]
   );
 
-  if (!rows.length) throw makeError('Invalid email or password', 401, 'INVALID_CREDENTIALS');
+  if (!rows.length) throw makeError('Invalid username or password', 401, 'INVALID_CREDENTIALS');
 
   const user = rows[0];
   const valid = await bcrypt.compare(password, user.password);
-  if (!valid) throw makeError('Invalid email or password', 401, 'INVALID_CREDENTIALS');
+  if (!valid) throw makeError('Invalid username or password', 401, 'INVALID_CREDENTIALS');
 
   const token = jwt.sign(
     { userId: user.id, username: user.username, role: user.role },

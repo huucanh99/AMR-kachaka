@@ -17,7 +17,7 @@ async function main() {
   // 2. Create Socket.io server (must exist before createApp so req.io works)
   const io = new SocketServer({
     cors: {
-      origin: (process.env.CORS_ORIGIN || 'http://localhost:5173').split(',').map(s => s.trim()),
+      origin: (process.env.CORS_ORIGIN || 'http://localhost:5173,http://localhost:5174').split(',').map(s => s.trim()),
       methods: ['GET', 'POST'],
     },
   });

@@ -2,25 +2,27 @@
 
 const { pool } = require('../config/db');
 
+const VALID_LANGS = ['en', 'zh-TW'];
+
 const DEFAULTS = {
   pickup_timeout_seconds:   30,
   delivery_timeout_seconds: 30,
+  language:                 'en',
 };
 
 async function getSettings() {
   const { rows } = await pool.query('SELECT key, value FROM settings');
-  const map = { ...DEFAULTS };
-  for (const row of rows) {
-    const n = Number(row.value);
-    if (!Number.isNaN(n) && n > 0) map[row.key] = n;
-  }
+  const map = {};
+  for (const row of rows) map[row.key] = row.value;
+
   return {
-    pickupTimeoutSeconds:   map.pickup_timeout_seconds,
-    deliveryTimeoutSeconds: map.delivery_timeout_seconds,
+    pickupTimeoutSeconds:   Math.max(1, Number(map.pickup_timeout_seconds)   || DEFAULTS.pickup_timeout_seconds),
+    deliveryTimeoutSeconds: Math.max(1, Number(map.delivery_timeout_seconds) || DEFAULTS.delivery_timeout_seconds),
+    language:               VALID_LANGS.includes(map.language) ? map.language : DEFAULTS.language,
   };
 }
 
-async function updateSettings({ pickupTimeoutSeconds, deliveryTimeoutSeconds } = {}) {
+async function updateSettings({ pickupTimeoutSeconds, deliveryTimeoutSeconds, language } = {}) {
   const ops = [];
 
   if (pickupTimeoutSeconds !== undefined) {
@@ -38,6 +40,14 @@ async function updateSettings({ pickupTimeoutSeconds, deliveryTimeoutSeconds } =
       `INSERT INTO settings (key, value) VALUES ($1, $2)
        ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
       ['delivery_timeout_seconds', String(v)]
+    ));
+  }
+
+  if (language !== undefined && VALID_LANGS.includes(language)) {
+    ops.push(pool.query(
+      `INSERT INTO settings (key, value) VALUES ($1, $2)
+       ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
+      ['language', language]
     ));
   }
 

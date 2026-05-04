@@ -5,41 +5,37 @@
         <span class="auth-logo-icon">🤖</span>
         <span class="auth-logo-text">Kachaka AMR</span>
       </div>
-      <h2 class="auth-title">Create account</h2>
+      <h2 class="auth-title">{{ t('register.title') }}</h2>
 
       <form @submit.prevent="submit">
         <div class="form-group">
-          <label>Username</label>
+          <label>{{ t('register.username') }}</label>
           <input v-model="form.username" type="text" placeholder="johndoe" required autocomplete="username" />
         </div>
         <div class="form-group">
-          <label>Email</label>
-          <input v-model="form.email" type="email" placeholder="you@example.com" required autocomplete="email" />
-        </div>
-        <div class="form-group">
-          <label>Password <span class="hint">(min 6 characters)</span></label>
+          <label>{{ t('register.password') }} <span class="hint">{{ t('register.passwordHint') }}</span></label>
           <input v-model="form.password" type="password" placeholder="••••••••" required autocomplete="new-password" />
         </div>
         <div class="form-group">
-          <label>Role</label>
+          <label>{{ t('register.role') }}</label>
           <select v-model="form.role">
-            <option value="operator">Operator</option>
-            <option value="viewer">Viewer</option>
-            <option value="admin">Admin</option>
+            <option value="operator">{{ t('users.roleOperator') }}</option>
+            <option value="viewer">{{ t('users.roleViewer') }}</option>
+            <option value="admin">{{ t('users.roleAdmin') }}</option>
           </select>
         </div>
 
         <div v-if="error" class="auth-error">{{ error }}</div>
-        <div v-if="success" class="auth-success">Account created! Redirecting to login...</div>
+        <div v-if="success" class="auth-success">{{ t('register.success') }}</div>
 
         <button type="submit" class="btn-primary auth-submit" :disabled="loading">
-          {{ loading ? 'Creating...' : 'Create account' }}
+          {{ loading ? t('register.submitting') : t('register.submit') }}
         </button>
       </form>
 
       <p class="auth-switch">
-        Already have an account?
-        <router-link to="/login">Sign in</router-link>
+        {{ t('register.haveAccount') }}
+        <router-link to="/login">{{ t('register.signIn') }}</router-link>
       </p>
     </div>
   </div>
@@ -49,9 +45,12 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { register } from '../api/auth'
+import { useI18n } from '../composables/useI18n'
 
 const router  = useRouter()
-const form    = ref({ username: '', email: '', password: '', role: 'operator' })
+const { t }   = useI18n()
+
+const form    = ref({ username: '', password: '', role: 'operator' })
 const loading = ref(false)
 const error   = ref(null)
 const success = ref(false)
@@ -64,7 +63,7 @@ async function submit() {
     success.value = true
     setTimeout(() => router.push('/login'), 1500)
   } catch (err) {
-    error.value = err.response?.data?.error || 'Registration failed'
+    error.value = err.response?.data?.error || t('register.failed')
   } finally {
     loading.value = false
   }
@@ -101,9 +100,7 @@ async function submit() {
   color: #fff;
   margin: 0 0 1.5rem;
 }
-.form-group {
-  margin-bottom: 1rem;
-}
+.form-group { margin-bottom: 1rem; }
 .form-group label {
   display: block;
   font-size: 0.82rem;
@@ -115,8 +112,8 @@ async function submit() {
 .form-group select {
   width: 100%;
   padding: 9px 12px;
-  background: #0f1117;
-  border: 1px solid #2a2d3e;
+  background: #252836;
+  border: 1px solid #3d4166;
   border-radius: 6px;
   color: #e0e0e0;
   font-size: 0.9rem;

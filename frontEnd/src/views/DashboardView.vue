@@ -21,20 +21,20 @@
     <!-- Floor map + Robot status -->
     <div style="display:grid;grid-template-columns:7fr 3fr;gap:1rem;">
       <div class="card">
-        <div class="card-title">Floor map — AMR-01 location</div>
+        <div class="card-title">{{ t('dashboard.floorMap') }}</div>
         <div class="map-wrap">
           <div class="map-legend">
             <div class="legend-item">
               <div class="legend-dot" style="background:#378ADD;animation:blink 1s infinite;box-shadow:0 0 5px rgba(55,138,221,0.5);"></div>
-              Robot en route
+              {{ t('dashboard.enRoute') }}
             </div>
             <div class="legend-item">
               <div class="legend-dot" style="background:#378ADD;box-shadow:0 0 5px rgba(55,138,221,0.5);"></div>
-              Robot arrived
+              {{ t('dashboard.arrived') }}
             </div>
             <div class="legend-item">
               <div class="legend-dot" style="background:#e0e0dd;"></div>
-              Idle
+              {{ t('dashboard.idle') }}
             </div>
           </div>
           <div class="floor-grid">
@@ -48,16 +48,16 @@
       </div>
 
       <div class="card">
-        <div class="card-title">Robot status</div>
+        <div class="card-title">{{ t('dashboard.robotStatus') }}</div>
         <div style="display:flex;flex-direction:column;gap:8px;">
           <div class="stat">
-            <div class="stat-label">State</div>
+            <div class="stat-label">{{ t('dashboard.state') }}</div>
             <div class="stat-value" style="color:#185FA5;">{{ commandStateLabel(robotStatus?.command?.state) }}</div>
           </div>
           <div class="stat">
-            <div class="stat-label">Connection</div>
+            <div class="stat-label">{{ t('common.connection') }}</div>
             <div class="stat-value" :style="{ color: connected ? '#3B6D11' : '#A32D2D' }">
-              {{ connected ? 'Connected' : 'Disconnected' }}
+              {{ connected ? t('common.connected') : t('common.disconnected') }}
             </div>
           </div>
         </div>
@@ -67,17 +67,17 @@
     <!-- Task queue -->
     <div class="card">
       <div class="card-header">
-        <div class="card-title" style="margin-bottom:0;">Task queue</div>
+        <div class="card-title" style="margin-bottom:0;">{{ t('dashboard.taskQueue') }}</div>
       </div>
-      <div v-if="taskQueue.length === 0" style="color:#aaa;font-size:13px;padding:8px 0;">No active tasks</div>
+      <div v-if="taskQueue.length === 0" style="color:#aaa;font-size:13px;padding:8px 0;">{{ t('dashboard.noActiveTasks') }}</div>
       <table v-else>
         <thead>
           <tr>
-            <th>Task ID</th>
-            <th>Pickup</th>
-            <th>Destination</th>
-            <th>Receiver</th>
-            <th>Status</th>
+            <th>{{ t('dashboard.taskId') }}</th>
+            <th>{{ t('dashboard.pickup') }}</th>
+            <th>{{ t('dashboard.destination') }}</th>
+            <th>{{ t('dashboard.receiver') }}</th>
+            <th>{{ t('common.status') }}</th>
             <th></th>
           </tr>
         </thead>
@@ -87,9 +87,9 @@
             <td>{{ task.pickup_location_id }}</td>
             <td>{{ task.destination_id }}</td>
             <td>{{ task.receiver_name }}</td>
-            <td><span class="badge" :class="STATUS_MAP[task.status]?.cls">{{ STATUS_MAP[task.status]?.label }}</span></td>
+            <td><span class="badge" :class="statusMap[task.status]?.cls">{{ t(statusMap[task.status]?.key) }}</span></td>
             <td>
-              <button v-if="task.status === 'waiting'" class="btn-cancel" @click="cancelTask(task.id)">Cancel</button>
+              <button v-if="task.status === 'waiting'" class="btn-cancel" @click="cancelTask(task.id)">{{ t('common.cancel') }}</button>
             </td>
           </tr>
         </tbody>
@@ -98,8 +98,8 @@
 
     <!-- System log -->
     <div class="card">
-      <div class="card-title">System log</div>
-      <div v-if="systemLogs.length === 0" style="color:#aaa;font-size:13px;padding:8px 0;">No events yet</div>
+      <div class="card-title">{{ t('dashboard.systemLog') }}</div>
+      <div v-if="systemLogs.length === 0" style="color:#aaa;font-size:13px;padding:8px 0;">{{ t('dashboard.noEvents') }}</div>
       <table v-else>
         <tbody>
           <tr v-for="log in systemLogs" :key="log.id">
@@ -114,12 +114,14 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import socket from '../socket'
 import { getLocations, getEvents } from '../api/robot'
 import { listTasks, cancelTask as apiCancelTask } from '../api/tasks'
+import { useI18n } from '../composables/useI18n'
 
-// Notifications from server (pickup_arrived / delivery_arrived)
+const { t } = useI18n()
+
 const notifications = ref([])
 let notifIdCounter = 0
 
@@ -138,7 +140,6 @@ function notifColor(type) {
 function pushNotification(notif) {
   const id = ++notifIdCounter
   notifications.value.unshift({ id, ...notif })
-  // Timeout alerts stay until dismissed; others auto-dismiss after 8 s
   const isAlert = notif.type === 'delivery_timeout' || notif.type === 'pickup_timeout'
   if (!isAlert) {
     setTimeout(() => {
@@ -151,12 +152,12 @@ function dismissNotif(id) {
   notifications.value = notifications.value.filter(n => n.id !== id)
 }
 
-const STATUS_MAP = {
-  waiting:     { label: 'Waiting',   cls: 'waiting'   },
-  in_progress: { label: 'Running',   cls: 'running'   },
-  completed:   { label: 'Done',      cls: 'done'      },
-  cancelled:   { label: 'Cancelled', cls: 'cancelled' },
-  failed:      { label: 'Failed',    cls: 'failed'    },
+const statusMap = {
+  waiting:     { key: 'status.waiting',   cls: 'waiting'   },
+  in_progress: { key: 'status.running',   cls: 'running'   },
+  completed:   { key: 'status.done',      cls: 'done'      },
+  cancelled:   { key: 'status.cancelled', cls: 'cancelled' },
+  failed:      { key: 'status.failed',    cls: 'failed'    },
 }
 
 const locations   = ref([])
@@ -169,18 +170,17 @@ const taskQueue = computed(() =>
   allTasks.value.filter(t => ['waiting', 'in_progress'].includes(t.status))
 )
 
-// Rooms — highlight based on runner phase
 const rooms = computed(() => {
   const runner = robotStatus.value?.runner
   const phase  = runner?.phase
 
-  let solidId  = null  // light on solid
-  let blinkId  = null  // light blinking (robot moving toward)
+  let solidId = null
+  let blinkId = null
 
-  if (phase === 'going_to_pickup')       blinkId  = runner.pickupLocationId
-  else if (phase === 'at_pickup')        solidId  = runner.pickupLocationId
+  if (phase === 'going_to_pickup')           blinkId = runner.pickupLocationId
+  else if (phase === 'at_pickup')            solidId = runner.pickupLocationId
   else if (phase === 'going_to_destination') blinkId = runner.destinationId
-  else if (phase === 'at_destination')   solidId  = runner.destinationId
+  else if (phase === 'at_destination')       solidId = runner.destinationId
 
   return locations.value
     .filter(l => l.type !== 'LOCATION_TYPE_CHARGER')
@@ -194,8 +194,8 @@ const rooms = computed(() => {
 })
 
 function commandStateLabel(state) {
-  if (state === 'COMMAND_STATE_RUNNING') return 'Navigating'
-  if (state === 'COMMAND_STATE_PENDING') return 'Idle'
+  if (state === 'COMMAND_STATE_RUNNING') return t('status.navigating')
+  if (state === 'COMMAND_STATE_PENDING') return t('status.idle')
   return '—'
 }
 
@@ -219,6 +219,8 @@ async function cancelTask(id) {
   await refreshTasks()
 }
 
+const LOCATIONS_CACHE_KEY = 'kachaka_locations_cache'
+
 const FALLBACK_ROOMS = [
   { id: 'loc-503', name: 'Room 503', type: 'LOCATION_TYPE_UNSPECIFIED' },
   { id: 'loc-504', name: 'Room 504', type: 'LOCATION_TYPE_UNSPECIFIED' },
@@ -228,22 +230,33 @@ const FALLBACK_ROOMS = [
   { id: 'loc-611', name: 'Meeting 611', type: 'LOCATION_TYPE_UNSPECIFIED' },
 ]
 
-const onConnect        = () => { connected.value = true  }
-const onDisconnect     = () => { connected.value = false }
-const onRobotStatus    = (s) => { robotStatus.value = s  }
-const onTaskCreated    = () => refreshTasks()
-const onTaskCancelled  = () => refreshTasks()
-const onTaskUpdated    = (data) => {
+function saveLocationsCache(locs) {
+  try { localStorage.setItem(LOCATIONS_CACHE_KEY, JSON.stringify(locs)) } catch {}
+}
+
+function loadLocationsCache() {
+  try {
+    const raw = localStorage.getItem(LOCATIONS_CACHE_KEY)
+    return raw ? JSON.parse(raw) : null
+  } catch { return null }
+}
+
+const onConnect       = () => { connected.value = true  }
+const onDisconnect    = () => { connected.value = false }
+const onRobotStatus   = (s) => { robotStatus.value = s  }
+const onTaskCreated   = () => refreshTasks()
+const onTaskCancelled = () => refreshTasks()
+const onTaskUpdated   = (data) => {
   refreshTasks()
   if (data?.phase === 'at_pickup') {
-    pushNotification({ type: 'pickup_arrived', taskId: data.taskId, title: 'Robot arrived at pickup', message: 'Please load the package and enter the verification code.' })
+    pushNotification({ type: 'pickup_arrived', taskId: data.taskId, title: t('dashboard.notif.pickupTitle'), message: t('dashboard.notif.pickupMsg') })
   }
   if (data?.phase === 'at_destination') {
-    pushNotification({ type: 'delivery_arrived', taskId: data.taskId, title: 'Package arrived at destination', message: 'Enter the verification code to confirm delivery.' })
+    pushNotification({ type: 'delivery_arrived', taskId: data.taskId, title: t('dashboard.notif.deliveryTitle'), message: t('dashboard.notif.deliveryMsg') })
   }
 }
-const onNotification   = (n) => pushNotification(n)
-const onTimeoutAlert   = (n) => pushNotification(n)
+const onNotification  = (n) => pushNotification(n)
+const onTimeoutAlert  = (n) => pushNotification(n)
 
 onMounted(async () => {
   const [tasksRes, logsRes, locRes] = await Promise.allSettled([
@@ -253,7 +266,12 @@ onMounted(async () => {
   ])
   if (tasksRes.status === 'fulfilled') allTasks.value   = tasksRes.value.data.data.tasks
   if (logsRes.status  === 'fulfilled') systemLogs.value = logsRes.value.data.data
-  locations.value = locRes.status === 'fulfilled' ? locRes.value.data.data : FALLBACK_ROOMS
+  if (locRes.status === 'fulfilled') {
+    locations.value = locRes.value.data.data
+    saveLocationsCache(locations.value)
+  } else {
+    locations.value = loadLocationsCache() ?? FALLBACK_ROOMS
+  }
 
   socket.on('connect',            onConnect)
   socket.on('disconnect',         onDisconnect)

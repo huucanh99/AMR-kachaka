@@ -2,27 +2,27 @@
   <div class="content">
     <div class="card">
       <div class="card-header">
-        <div class="card-title" style="margin-bottom:0;">Shelf layers — {{ SHELF_ID }}</div>
-        <button class="btn-secondary" @click="openAdd">+ Add layer</button>
+        <div class="card-title" style="margin-bottom:0;">{{ t('shelf.title', { id: SHELF_ID }) }}</div>
+        <button class="btn-secondary" @click="openAdd">{{ t('shelf.addLayer') }}</button>
       </div>
 
-      <div v-if="loading" style="color:#aaa;font-size:13px;padding:8px 0;">Loading…</div>
+      <div v-if="loading" style="color:#aaa;font-size:13px;padding:8px 0;">{{ t('common.loading') }}</div>
 
       <div v-else-if="layers.length === 0" style="color:#aaa;font-size:13px;padding:8px 0;">
-        No shelf layers yet. Click "Add layer" to create one.
+        {{ t('shelf.noLayers') }}
       </div>
 
       <template v-else>
         <div class="shelf-header-flex">
-          <div class="col-s"><span style="font-size:11px;color:#aaa;">Layer</span></div>
-          <div class="col-st"><span style="font-size:11px;color:#aaa;">Status</span></div>
-          <div class="col-w"><span style="font-size:11px;color:#aaa;">Max weight</span></div>
-          <div class="col-av"><span style="font-size:11px;color:#aaa;">In Create Task</span></div>
+          <div class="col-s"><span style="font-size:11px;color:#aaa;">{{ t('shelf.colLayer') }}</span></div>
+          <div class="col-st"><span style="font-size:11px;color:#aaa;">{{ t('shelf.colStatus') }}</span></div>
+          <div class="col-w"><span style="font-size:11px;color:#aaa;">{{ t('shelf.colMaxWeight') }}</span></div>
+          <div class="col-av"><span style="font-size:11px;color:#aaa;">{{ t('shelf.colInCreateTask') }}</span></div>
           <div class="col-ac"></div>
         </div>
 
         <div v-for="layer in layers" :key="layer.layer" class="shelf-row-flex">
-          <div class="col-s">Layer {{ layer.layer }}</div>
+          <div class="col-s">{{ t('shelf.layerLabel', { n: layer.layer }) }}</div>
           <div class="col-st">
             <span class="badge" :class="statusBadgeClass(layer.status)">
               <span class="dot" :style="{ background: statusDotColor(layer.status) }"></span>
@@ -38,24 +38,24 @@
           <div class="col-ac">
             <template v-if="layer.status === 'busy'">
               <span style="font-size:11px;color:#aaa;padding:4px 10px;">
-                In use by #{{ layer.task_id }}
+                {{ t('shelf.inUseBy', { id: layer.task_id }) }}
                 <span v-if="layer.receiver_name"> ({{ layer.receiver_name }})</span>
               </span>
             </template>
             <template v-else>
-              <button class="btn-edit" @click="openEdit(layer)">Edit</button>
+              <button class="btn-edit" @click="openEdit(layer)">{{ t('common.edit') }}</button>
               <button
                 v-if="layer.status === 'active'"
                 class="btn-maint"
                 :disabled="actionLoading === layer.layer"
                 @click="setStatus(layer, 'maintenance')"
-              >Set maintenance</button>
+              >{{ t('shelf.setMaintenance') }}</button>
               <button
                 v-else-if="layer.status === 'maintenance'"
                 class="btn-activate"
                 :disabled="actionLoading === layer.layer"
                 @click="setStatus(layer, 'active')"
-              >Set active</button>
+              >{{ t('shelf.setActive') }}</button>
             </template>
           </div>
         </div>
@@ -66,25 +66,25 @@
     <Teleport to="body">
       <div v-if="showAddModal" class="modal-overlay" @click.self="showAddModal = false">
         <div class="modal">
-          <div class="modal-title">Add new layer</div>
+          <div class="modal-title">{{ t('shelf.addModal.title') }}</div>
 
           <div v-if="addError" style="color:#A32D2D;font-size:12px;width:100%;text-align:center;">{{ addError }}</div>
 
           <div class="modal-form">
             <div class="form-row">
-              <label>Layer number</label>
+              <label>{{ t('shelf.addModal.layerNum') }}</label>
               <input v-model.number="addForm.layer" type="number" min="1" placeholder="e.g. 1" />
             </div>
             <div class="form-row">
-              <label>Max weight (kg)</label>
+              <label>{{ t('shelf.addModal.maxWeight') }}</label>
               <input v-model.number="addForm.maxWeight" type="number" min="0.5" step="0.5" placeholder="e.g. 5" />
             </div>
           </div>
 
           <div class="modal-actions">
-            <button class="btn-secondary" @click="showAddModal = false">Cancel</button>
+            <button class="btn-secondary" @click="showAddModal = false">{{ t('common.cancel') }}</button>
             <button class="btn-blue" :disabled="addLoading" @click="submitAdd">
-              {{ addLoading ? 'Creating…' : 'Create layer' }}
+              {{ addLoading ? t('shelf.addModal.creating') : t('shelf.addModal.create') }}
             </button>
           </div>
         </div>
@@ -95,21 +95,21 @@
     <Teleport to="body">
       <div v-if="editLayer" class="modal-overlay" @click.self="editLayer = null">
         <div class="modal">
-          <div class="modal-title">Edit Layer {{ editLayer.layer }}</div>
+          <div class="modal-title">{{ t('shelf.editModal.title', { n: editLayer.layer }) }}</div>
 
           <div v-if="editError" style="color:#A32D2D;font-size:12px;width:100%;text-align:center;">{{ editError }}</div>
 
           <div class="modal-form">
             <div class="form-row">
-              <label>Max weight (kg)</label>
+              <label>{{ t('shelf.editModal.maxWeight') }}</label>
               <input v-model.number="editWeight" type="number" min="0.5" step="0.5" />
             </div>
           </div>
 
           <div class="modal-actions">
-            <button class="btn-secondary" @click="editLayer = null">Cancel</button>
+            <button class="btn-secondary" @click="editLayer = null">{{ t('common.cancel') }}</button>
             <button class="btn-blue" :disabled="editLoading" @click="submitEdit">
-              {{ editLoading ? 'Saving…' : 'Save' }}
+              {{ editLoading ? t('shelf.editModal.saving') : t('common.save') }}
             </button>
           </div>
         </div>
@@ -121,28 +121,29 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { getShelfLayers, createShelfLayer, updateShelfLayer, setShelfLayerStatus } from '../api/robot'
+import { useI18n } from '../composables/useI18n'
+
+const { t } = useI18n()
 
 const SHELF_ID      = 'shelf-001'
 const layers        = ref([])
 const loading       = ref(false)
 const actionLoading = ref(null)
 
-// Add modal
 const showAddModal = ref(false)
 const addLoading   = ref(false)
 const addError     = ref('')
 const addForm      = ref({ layer: '', maxWeight: 5 })
 
-// Edit modal
 const editLayer    = ref(null)
 const editWeight   = ref(5)
 const editLoading  = ref(false)
 const editError    = ref('')
 
 function statusLabel(s) {
-  if (s === 'busy')        return 'Busy'
-  if (s === 'maintenance') return 'Maintenance'
-  return 'Active'
+  if (s === 'busy')        return t('shelf.busy')
+  if (s === 'maintenance') return t('shelf.maintenance')
+  return t('shelf.active')
 }
 function statusBadgeClass(s) {
   if (s === 'busy')        return 'running'
@@ -169,7 +170,7 @@ function openAdd() {
   const nextLayer = layers.value.length
     ? Math.max(...layers.value.map(l => l.layer)) + 1
     : 1
-  addForm.value = { layer: nextLayer, maxWeight: 5 }
+  addForm.value  = { layer: nextLayer, maxWeight: 5 }
   addError.value = ''
   showAddModal.value = true
 }
@@ -182,11 +183,7 @@ async function submitAdd() {
   }
   addLoading.value = true
   try {
-    await createShelfLayer({
-      shelfId:   SHELF_ID,
-      layer:     addForm.value.layer,
-      maxWeight: addForm.value.maxWeight || 5,
-    })
+    await createShelfLayer({ shelfId: SHELF_ID, layer: addForm.value.layer, maxWeight: addForm.value.maxWeight || 5 })
     showAddModal.value = false
     await refresh()
   } catch (e) {
@@ -203,7 +200,7 @@ function openEdit(layer) {
 }
 
 async function submitEdit() {
-  editError.value = ''
+  editError.value   = ''
   editLoading.value = true
   try {
     await updateShelfLayer(SHELF_ID, editLayer.value.layer, { maxWeight: editWeight.value })
@@ -252,25 +249,10 @@ onMounted(refresh)
   gap: 14px;
   box-shadow: 0 20px 60px rgba(0,0,0,0.2);
 }
-.modal-title {
-  font-size: 16px;
-  font-weight: 600;
-}
-.modal-form {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.form-row {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.form-row label {
-  font-size: 12px;
-  color: #aaa;
-}
+.modal-title { font-size: 16px; font-weight: 600; }
+.modal-form { width: 100%; display: flex; flex-direction: column; gap: 10px; }
+.form-row { display: flex; flex-direction: column; gap: 4px; }
+.form-row label { font-size: 12px; color: #aaa; }
 .form-row input {
   width: 100%;
   padding: 8px 10px;
@@ -280,14 +262,8 @@ onMounted(refresh)
   box-sizing: border-box;
   outline: none;
 }
-.form-row input:focus {
-  border-color: #185FA5;
-}
-.modal-actions {
-  display: flex;
-  gap: 8px;
-  width: 100%;
-}
+.form-row input:focus { border-color: #185FA5; }
+.modal-actions { display: flex; gap: 8px; width: 100%; }
 .modal-actions button { flex: 1; }
 .btn-blue {
   background: #185FA5;

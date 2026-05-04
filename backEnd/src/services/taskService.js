@@ -234,12 +234,14 @@ async function cancelTask(id) {
       [taskId]
     );
 
-    await client.query(
-      `UPDATE shelf_layers
-          SET status = 'active', updated_at = NOW()
-        WHERE shelf_id = $1 AND layer = $2`,
-      [task.shelf_id, task.shelf_layer]
-    );
+    if (task.shelf_id && task.shelf_layer) {
+      await client.query(
+        `UPDATE shelf_layers
+            SET status = 'active', updated_at = NOW()
+          WHERE shelf_id = $1 AND layer = $2`,
+        [task.shelf_id, task.shelf_layer]
+      );
+    }
 
     await addTimelineEntry(client, taskId, 'cancelled', 'Cancelled via API');
 

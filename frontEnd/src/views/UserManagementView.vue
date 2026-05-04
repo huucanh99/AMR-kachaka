@@ -1,47 +1,41 @@
 <template>
   <div class="content">
     <div class="card" style="max-width:520px;margin-bottom:1.5rem;">
-      <div class="card-title">Create user</div>
+      <div class="card-title">{{ t('users.createTitle') }}</div>
       <form @submit.prevent="submitCreate" style="display:flex;flex-direction:column;gap:0.75rem;">
         <div class="form-group">
-          <label>Username</label>
+          <label>{{ t('users.username') }}</label>
           <input v-model="form.username" type="text" placeholder="johndoe" required />
         </div>
         <div class="form-group">
-          <label>Email</label>
-          <input v-model="form.email" type="email" placeholder="you@example.com" required />
-        </div>
-        <div class="form-group">
-          <label>Password <span class="hint">(min 6 characters)</span></label>
+          <label>{{ t('users.password') }} <span class="hint">{{ t('users.passwordHint') }}</span></label>
           <input v-model="form.password" type="password" placeholder="••••••••" required />
         </div>
 
         <div v-if="createError" class="alert-error">{{ createError }}</div>
-        <div v-if="createSuccess" class="alert-success">User created successfully.</div>
+        <div v-if="createSuccess" class="alert-success">{{ t('users.created') }}</div>
 
         <button type="submit" class="btn-primary" :disabled="creating" style="align-self:flex-start;padding:8px 20px;">
-          {{ creating ? 'Creating...' : 'Create user' }}
+          {{ creating ? t('users.creating') : t('users.createBtn') }}
         </button>
       </form>
     </div>
 
     <div class="card">
-      <div class="card-title">Users</div>
-      <div v-if="loadingUsers" style="color:#888;padding:0.5rem 0;">Loading...</div>
+      <div class="card-title">{{ t('users.listTitle') }}</div>
+      <div v-if="loadingUsers" style="color:#888;padding:0.5rem 0;">{{ t('users.loading') }}</div>
       <div v-else-if="fetchError" style="color:#e57373;">{{ fetchError }}</div>
       <table v-else>
         <thead>
           <tr>
-            <th>Username</th>
-            <th>Email</th>
-            <th>Created</th>
+            <th>{{ t('users.username') }}</th>
+            <th>{{ t('users.createdAt') }}</th>
             <th style="width:60px;"></th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="u in users" :key="u.id">
             <td>{{ u.username }}</td>
-            <td style="color:#888;font-size:0.85rem;">{{ u.email }}</td>
             <td style="color:#888;font-size:0.8rem;">{{ formatDate(u.created_at) }}</td>
             <td>
               <button
@@ -53,7 +47,7 @@
             </td>
           </tr>
           <tr v-if="users.length === 0">
-            <td colspan="4" style="text-align:center;color:#888;padding:1rem;">No users found</td>
+            <td colspan="3" style="text-align:center;color:#888;padding:1rem;">{{ t('users.noUsers') }}</td>
           </tr>
         </tbody>
       </table>
@@ -64,15 +58,15 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { register, getUsers, deleteUser } from '../api/auth'
-import { useAuth } from '../composables/useAuth'
+import { useI18n } from '../composables/useI18n'
 
-const { user: currentUser } = useAuth()
+const { t } = useI18n()
 
-const users       = ref([])
+const users        = ref([])
 const loadingUsers = ref(true)
-const fetchError  = ref(null)
+const fetchError   = ref(null)
 
-const form          = ref({ username: '', email: '', password: '' })
+const form          = ref({ username: '', password: '' })
 const creating      = ref(false)
 const createError   = ref(null)
 const createSuccess = ref(false)
@@ -83,7 +77,7 @@ async function fetchUsers() {
     const res = await getUsers()
     users.value = res.data.data
   } catch (err) {
-    fetchError.value = 'Failed to load users'
+    fetchError.value = t('users.loadFailed')
   } finally {
     loadingUsers.value = false
   }
@@ -96,11 +90,11 @@ async function submitCreate() {
   try {
     await register(form.value)
     createSuccess.value = true
-    form.value = { username: '', email: '', password: '' }
+    form.value = { username: '', password: '' }
     fetchUsers()
     setTimeout(() => { createSuccess.value = false }, 3000)
   } catch (err) {
-    createError.value = err.response?.data?.error || 'Failed to create user'
+    createError.value = err.response?.data?.error || t('users.createFailed')
   } finally {
     creating.value = false
   }
@@ -125,11 +119,6 @@ onMounted(fetchUsers)
 </script>
 
 <style scoped>
-.form-row {
-  display: flex;
-  gap: 0.75rem;
-}
-.form-row .form-group { flex: 1; }
 .form-group {
   display: flex;
   flex-direction: column;
@@ -143,16 +132,7 @@ onMounted(fetchUsers)
 .form-group input,
 .form-group select {
   padding: 8px 10px;
-  background: #0f1117;
-  border: 1px solid #2a2d3e;
-  border-radius: 6px;
-  color: #e0e0e0;
   font-size: 0.88rem;
-}
-.form-group input:focus,
-.form-group select:focus {
-  outline: none;
-  border-color: #4f8ef7;
 }
 .alert-error {
   background: rgba(229,115,115,0.12);
@@ -170,15 +150,6 @@ onMounted(fetchUsers)
   padding: 7px 12px;
   font-size: 0.85rem;
 }
-.role-badge {
-  font-size: 0.75rem;
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-weight: 500;
-}
-.role-badge.admin    { background: rgba(79,142,247,0.15); color: #4f8ef7; }
-.role-badge.operator { background: rgba(102,187,106,0.15); color: #66bb6a; }
-.role-badge.viewer   { background: rgba(170,170,170,0.1); color: #aaa; }
 .btn-delete {
   background: none;
   border: 1px solid #2a2d3e;

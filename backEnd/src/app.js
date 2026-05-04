@@ -12,7 +12,7 @@ function createApp(io) {
   const app = express();
 
   // ── Middleware ────────────────────────────────────────────────────────────
-  const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:5173')
+  const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:5173,http://localhost:5174')
     .split(',')
     .map(s => s.trim());
 

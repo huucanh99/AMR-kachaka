@@ -20,9 +20,11 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import socket from '../socket'
 import { useAuth } from '../composables/useAuth'
+import { useI18n } from '../composables/useI18n'
 
 const router = useRouter()
 const { user, clearAuth } = useAuth()
+const { t } = useI18n()
 
 function logout() {
   clearAuth()
@@ -36,18 +38,22 @@ const avatarInitials = computed(() => {
 
 const route = useRoute()
 
-const titleMap = {
-  'dashboard':       'Dashboard',
-  'robot-status':    'Robot status',
-  'create-task':     'Create task',
-  'task-history':    'Task history',
-  'logs':            'Logs',
-  'settings':        'Settings',
-  'shelf-management':'Shelf management',
+const titleKeyMap = {
+  'dashboard':        'title.dashboard',
+  'robot-status':     'title.robotStatus',
+  'create-task':      'title.createTask',
+  'task-history':     'title.taskHistory',
+  'logs':             'title.logs',
+  'settings':         'title.settings',
+  'shelf-management': 'title.shelfManagement',
 }
-const title = computed(() => titleMap[route.name] || 'AMR Platform')
 
-const battery     = ref(null)
+const title = computed(() => {
+  const key = titleKeyMap[route.name]
+  return key ? t(key) : 'AMR Platform'
+})
+
+const battery      = ref(null)
 const batteryStatus = ref('')
 
 const batteryColor = computed(() => {
@@ -59,16 +65,16 @@ const batteryColor = computed(() => {
 
 const batteryStatusLabel = computed(() => {
   const map = {
-    POWER_SUPPLY_STATUS_CHARGING:     'Charging',
-    POWER_SUPPLY_STATUS_DISCHARGING:  'Discharging',
-    POWER_SUPPLY_STATUS_FULL:         'Full',
-    POWER_SUPPLY_STATUS_NOT_CHARGING: 'Not charging',
+    POWER_SUPPLY_STATUS_CHARGING:     t('battery.charging'),
+    POWER_SUPPLY_STATUS_DISCHARGING:  t('battery.discharging'),
+    POWER_SUPPLY_STATUS_FULL:         t('battery.full'),
+    POWER_SUPPLY_STATUS_NOT_CHARGING: t('battery.notCharging'),
   }
   return map[batteryStatus.value] || ''
 })
 
 function onStatus(s) {
-  battery.value      = Math.round(s.battery.percentage)
+  battery.value       = Math.round(s.battery.percentage)
   batteryStatus.value = s.battery.status
 }
 
