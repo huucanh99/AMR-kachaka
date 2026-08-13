@@ -21,8 +21,8 @@ router.get('/', async (_req, res) => {
 // PUT /api/settings
 router.put('/', async (req, res) => {
   try {
-    const { pickupTimeoutSeconds, deliveryTimeoutSeconds, language } = req.body;
-    const data = await settingsService.updateSettings({ pickupTimeoutSeconds, deliveryTimeoutSeconds, language });
+    const { pickupTimeoutSeconds, deliveryTimeoutSeconds, language, kachakaHost, kachakaPort } = req.body;
+    const data = await settingsService.updateSettings({ pickupTimeoutSeconds, deliveryTimeoutSeconds, language, kachakaHost, kachakaPort });
     res.json({ success: true, data });
   } catch (err) { handleError(res, err); }
 });

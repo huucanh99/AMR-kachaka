@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>AMR Kachaka — Web Interface Features</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: #111827;
+  color: #e5e7eb;
+  height: 100vh; width: 100vw;
+  overflow: hidden;
+}
+
+/* ── slides ── */
+.slide {
+  display: none;
+  position: absolute;
+  inset: 0;
+  padding: 52px 72px;
+  flex-direction: column;
+  animation: fi .35s ease;
+}
+.slide.active { display: flex; }
+@keyframes fi { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
+
+/* ── progress bar ── */
+#bar {
+  position: fixed; top:0; left:0; height:3px;
+  background: linear-gradient(90deg,#3b82f6,#6366f1);
+  transition: width .35s; z-index:99;
+}
+
+/* ── nav ── */
+.nav {
+  position: fixed; bottom:24px; right:28px;
+  display:flex; align-items:center; gap:10px; z-index:99;
+}
+.nav span { font-size:12px; color:#6b7280; }
+.nbtn {
+  width:36px; height:36px; border-radius:50%;
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.12);
+  color:#9ca3af; cursor:pointer; font-size:15px;
+  display:flex; align-items:center; justify-content:center;
+  transition: all .15s;
+}
+.nbtn:hover { background:rgba(59,130,246,.2); border-color:#3b82f6; color:#fff; }
+.nbtn:disabled { opacity:.3; cursor:default; }
+
+/* ── slide 1 — title ── */
+.s-title {
+  background: linear-gradient(135deg,#0f172a,#1e293b);
+  justify-content: center;
+}
+.s-title h1 {
+  font-size:52px; font-weight:700; line-height:1.2;
+  background: linear-gradient(135deg,#fff 40%,#60a5fa);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  background-clip:text;
+  margin-bottom:16px;
+}
+.s-title .sub { font-size:18px; color:#94a3b8; margin-bottom:40px; }
+.s-title .meta { display:flex; gap:28px; font-size:13px; color:#4b5563; }
+.s-title .meta b { color:#9ca3af; }
+.acbar {
+  position:absolute; left:0; top:0; bottom:0; width:4px;
+  background:linear-gradient(180deg,#3b82f6,#6366f1);
+}
+
+/* ── section header ── */
+.sh { margin-bottom:28px; }
+.sh .tag {
+  font-size:11px; color:#60a5fa; letter-spacing:1.5px;
+  text-transform:uppercase; margin-bottom:6px;
+}
+.sh h2 { font-size:32px; font-weight:700; }
+.sh .admin-tag {
+  display:inline-block; font-size:13px; font-weight:600;
+  background:rgba(239,68,68,.15); color:#f87171;
+  border:1px solid rgba(239,68,68,.3);
+  padding:2px 12px; border-radius:99px; margin-left:12px;
+  vertical-align:middle;
+}
+.sh .bar { width:40px; height:3px; background:#3b82f6; border-radius:2px; margin-top:10px; }
+
+/* ── cards ── */
+.grid { display:grid; gap:14px; }
+.g2 { grid-template-columns:1fr 1fr; }
+.g3 { grid-template-columns:1fr 1fr 1fr; }
+.g4 { grid-template-columns:1fr 1fr 1fr 1fr; }
+
+.card {
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:12px; padding:20px;
+}
+.card:hover { border-color:rgba(59,130,246,.3); }
+
+.ci {
+  width:36px; height:36px; border-radius:9px;
+  background:rgba(59,130,246,.12);
+  display:flex; align-items:center; justify-content:center;
+  font-size:18px; margin-bottom:12px;
+}
+.card h3 { font-size:14px; font-weight:600; color:#d1d5db; margin-bottom:8px; }
+.card p, .card ul { font-size:12.5px; color:#6b7280; line-height:1.75; }
+.card ul { padding-left:15px; }
+.card ul li { margin-bottom:1px; }
+
+/* ── feature row (label + items) ── */
+.feat-section { margin-bottom:18px; }
+.feat-section h3 {
+  font-size:12px; font-weight:600; color:#60a5fa;
+  text-transform:uppercase; letter-spacing:1px;
+  margin-bottom:8px; padding-bottom:4px;
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+.feat-row {
+  display:flex; align-items:baseline;
+  gap:10px; margin-bottom:6px;
+}
+.feat-row .dot { color:#3b82f6; font-size:10px; flex-shrink:0; }
+.feat-row .label { font-size:13px; color:#d1d5db; min-width:180px; font-weight:500; }
+.feat-row .desc  { font-size:12.5px; color:#6b7280; line-height:1.6; }
+
+/* ── mock UI elements ── */
+.btn-mock {
+  display:inline-flex; align-items:center; gap:5px;
+  background:rgba(59,130,246,.12); border:1px solid rgba(59,130,246,.3);
+  color:#60a5fa; border-radius:7px; padding:5px 12px;
+  font-size:11.5px; font-weight:500; margin:3px;
+}
+.btn-mock.red { background:rgba(239,68,68,.12); border-color:rgba(239,68,68,.3); color:#f87171; }
+.btn-mock.green { background:rgba(34,197,94,.1); border-color:rgba(34,197,94,.25); color:#4ade80; }
+.btn-mock.gray { background:rgba(255,255,255,.05); border-color:rgba(255,255,255,.1); color:#9ca3af; }
+
+.badge-mock {
+  display:inline-block; font-size:10px; font-weight:600;
+  padding:2px 9px; border-radius:99px;
+}
+.bm-blue  { background:rgba(59,130,246,.15); color:#60a5fa; }
+.bm-green { background:rgba(34,197,94,.12);  color:#4ade80; }
+.bm-red   { background:rgba(239,68,68,.12);  color:#f87171; }
+.bm-gray  { background:rgba(255,255,255,.07); color:#9ca3af; }
+.bm-yellow{ background:rgba(234,179,8,.12);  color:#fbbf24; }
+
+.pill-row { display:flex; gap:6px; flex-wrap:wrap; margin:6px 0; }
+
+/* ── table mock ── */
+.tbl { width:100%; font-size:12px; border-collapse:collapse; }
+.tbl th { color:#6b7280; font-weight:500; padding:6px 8px; border-bottom:1px solid rgba(255,255,255,.07); text-align:left; }
+.tbl td { padding:5px 8px; border-bottom:1px solid rgba(255,255,255,.04); color:#9ca3af; }
+.tbl td:first-child { color:#d1d5db; }
+
+/* ── two-col layout ── */
+.tc { display:grid; grid-template-columns:1fr 1fr; gap:28px; }
+.tc3 { display:grid; grid-template-columns:2fr 3fr; gap:28px; }
+.tc4 { display:grid; grid-template-columns:3fr 2fr; gap:28px; }
+
+/* ── metric box ── */
+.metric-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
+.mbox {
+  background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.06);
+  border-radius:8px; padding:10px 12px; text-align:center;
+}
+.mbox .mv { font-size:16px; font-weight:700; color:#60a5fa; }
+.mbox .ml { font-size:10px; color:#6b7280; margin-top:2px; }
+
+/* ── form mock ── */
+.form-mock { display:flex; flex-direction:column; gap:8px; }
+.field-mock {
+  background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.08);
+  border-radius:7px; padding:8px 12px;
+  font-size:12px; color:#6b7280;
+}
+.field-label { font-size:11px; color:#4b5563; margin-bottom:2px; }
+
+/* ── summary slide ── */
+.s-summary {
+  background: linear-gradient(135deg,#0f172a,#1e293b);
+  justify-content:center; align-items:center; text-align:center;
+}
+.s-summary h2 { font-size:36px; font-weight:700; margin-bottom:12px; }
+.s-summary p  { font-size:15px; color:#94a3b8; margin-bottom:36px; }
+.stat-row { display:flex; gap:32px; justify-content:center; flex-wrap:wrap; }
+.stat-box { text-align:center; }
+.stat-box .n { font-size:44px; font-weight:800; color:#3b82f6; line-height:1; }
+.stat-box .l { font-size:12px; color:#6b7280; margin-top:4px; }
+
+code {
+  font-size:11px; background:rgba(255,255,255,.07);
+  padding:1px 5px; border-radius:3px; font-family:Consolas,monospace;
+}
+</style>
+</head>
+<body>
+<div id="bar"></div>
+
+<!-- ═══════════════════════════════ -->
+<!-- SLIDE 1 — TITLE                -->
+<!-- ═══════════════════════════════ -->
+<div class="slide s-title active" id="s1">
+  <div class="acbar"></div>
+  <div style="font-size:12px;color:#3b82f6;letter-spacing:2px;text-transform:uppercase;margin-bottom:22px;">Web Interface Presentation</div>
+  <h1>AMR Kachaka<br>Management Platform</h1>
+  <div class="sub">What the website can do — page by page</div>
+  <div class="meta">
+    <div>Robot &nbsp;<b>Kachaka (Preferred Robotics)</b></div>
+    <div>Frontend &nbsp;<b>Vue 3</b></div>
+    <div>Backend &nbsp;<b>Node.js + Socket.io</b></div>
+    <div>Date &nbsp;<b>May 2026</b></div>
+  </div>
+
+  <svg style="position:absolute;right:72px;top:50%;transform:translateY(-50%);opacity:.05;" width="380" height="380" viewBox="0 0 100 100">
+    <circle cx="50" cy="50" r="47" stroke="#3b82f6" stroke-width="1" fill="none"/>
+    <circle cx="50" cy="50" r="33" stroke="#3b82f6" stroke-width=".6" fill="none"/>
+    <circle cx="50" cy="50" r="18" stroke="#3b82f6" stroke-width=".6" fill="none"/>
+    <line x1="3" y1="50" x2="97" y2="50" stroke="#3b82f6" stroke-width=".4"/>
+    <line x1="50" y1="3" x2="50" y2="97" stroke="#3b82f6" stroke-width=".4"/>
+  </svg>
+</div>
+
+<!-- ═══════════════════════════════ -->
+<!-- SLIDE 2 — LOGIN / REGISTER     -->
+<!-- ═══════════════════════════════ -->
+<div class="slide" id="s2">
+  <div class="sh">
+    <div class="tag">Page 1</div>
+    <h2>Login &amp; Register</h2>
+    <div class="bar"></div>
+  </div>
+
+  <div class="tc">
+    <div>
+      <div class="feat-section">
+        <h3>Login</h3>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Username + Password</span><span class="desc">Enter credentials to log in</span></div>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Auto-redirect</span><span class="desc">Redirected to Dashboard on success; stays on Login if token already valid</span></div>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Error message</span><span class="desc">Displays "Invalid credentials" inline if login fails</span></div>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Go to Register</span><span class="desc">Link to the registration page</span></div>
+      </div>
+      <div class="feat-section">
+        <h3>Register</h3>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Username + Password</span><span class="desc">Create a new account</span></div>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Duplicate check</span><span class="desc">Shows error if username already exists</span></div>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Default role</span><span class="desc">New accounts are created as <b style="color:#d1d5db">User</b> (not Admin)</span></div>
+      </div>
+      <div class="feat-section">
+        <h3>Session &amp; Security</h3>
+        <div class="feat-row"><span class="dot">●</span><span class="label">JWT token</span><span class="desc">Stored in localStorage; auto-logout when expired</span></div>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Route guard</span><span class="desc">All pages redirect to Login if no token found</span></div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px;justify-content:center;">
+      <div class="card">
+        <div style="font-size:11px;color:#4b5563;margin-bottom:12px;font-weight:600;">LOGIN FORM</div>
+        <div class="form-mock">
+          <div><div class="field-label">Username</div><div class="field-mock">johndoe</div></div>
+          <div><div class="field-label">Password</div><div class="field-mock">••••••••</div></div>
+          <div class="btn-mock" style="justify-content:center;margin-top:4px;">Sign In</div>
+        </div>
+      </div>
+      <div class="card" style="font-size:12px;color:#6b7280;">
+        <span class="badge-mock bm-blue">Admin</span> &nbsp; Full access to all pages<br>
+        <span class="badge-mock bm-gray" style="margin-top:6px;display:inline-block;">User</span> &nbsp;&nbsp; Limited access (no Robot Control, Camera, User Management)
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ -->
+<!-- SLIDE 3 — DASHBOARD            -->
+<!-- ═══════════════════════════════ -->
+<div class="slide" id="s3">
+  <div class="sh">
+    <div class="tag">Page 2</div>
+    <h2>Dashboard</h2>
+    <div class="bar"></div>
+  </div>
+
+  <div class="tc">
+    <div>
+      <div class="feat-section">
+        <h3>Floor Map</h3>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Room grid</span><span class="desc">All registered locations displayed as clickable tiles</span></div>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Robot position</span><span class="desc"><span class="badge-mock bm-blue">● blinking</span> = robot moving there &nbsp;&nbsp; <span class="badge-mock bm-blue">● solid</span> = arrived</span></div>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Auto-sync</span><span class="desc">Map updates automatically when robot connects or reconnects</span></div>
+      </div>
+      <div class="feat-section">
+        <h3>Robot Status (mini)</h3>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Command state</span><span class="desc">Navigating / Idle</span></div>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Connection</span><span class="desc"><span class="badge-mock bm-green">Connected</span> / <span class="badge-mock bm-red">Disconnected</span></span></div>
+      </div>
+      <div class="feat-section">
+        <h3>Task Queue</h3>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Active tasks table</span><span class="desc">Shows: Task ID · Pickup · Destination · Receiver · Status</span></div>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Cancel button</span><span class="desc">Cancel a <span class="badge-mock bm-yellow">Waiting</span> task directly from the queue</span></div>
+      </div>
+      <div class="feat-section">
+        <h3>System Log &amp; Notifications</h3>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Live system log</span><span class="desc">Recent events with timestamp and event type</span></div>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Toast alerts</span><span class="desc">Pop-up for: robot arrived at pickup, delivery complete, timeout</span></div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div class="card">
+        <div style="font-size:11px;color:#4b5563;margin-bottom:10px;font-weight:600;">FLOOR MAP</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">
+          <div style="background:rgba(59,130,246,.18);border:1px solid #3b82f6;border-radius:7px;padding:8px 6px;text-align:center;font-size:11px;">
+            <div style="width:8px;height:8px;background:#3b82f6;border-radius:50%;margin:0 auto 4px;animation:none;"></div>
+            Room 503<br><span style="font-size:9px;color:#60a5fa;">AMR-01</span>
+          </div>
+          <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:7px;padding:8px 6px;text-align:center;font-size:11px;color:#4b5563;">
+            <div style="width:8px;height:8px;background:#374151;border-radius:50%;margin:0 auto 4px;"></div>
+            Room 504
+          </div>
+          <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:7px;padding:8px 6px;text-align:center;font-size:11px;color:#4b5563;">
+            <div style="width:8px;height:8px;background:#374151;border-radius:50%;margin:0 auto 4px;"></div>
+            Room 601
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <table class="tbl">
+          <thead><tr><th>#</th><th>Pickup</th><th>Destination</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            <tr><td>#42</td><td>R 503</td><td>R 601</td><td><span class="badge-mock bm-blue">Running</span></td><td></td></tr>
+            <tr><td>#43</td><td>R 504</td><td>R 611</td><td><span class="badge-mock bm-yellow">Waiting</span></td><td><span class="btn-mock gray" style="font-size:10px;padding:2px 7px;">Cancel</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ -->
+<!-- SLIDE 4 — ROBOT STATUS         -->
+<!-- ═══════════════════════════════ -->
+<div class="slide" id="s4">
+  <div class="sh">
+    <div class="tag">Page 3</div>
+    <h2>Robot Status <span class="admin-tag">Admin only</span></h2>
+    <div class="bar"></div>
+  </div>
+
+  <div class="tc">
+    <div>
+      <div class="feat-section">
+        <h3>Live Metrics (updates every 0.5 s)</h3>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Command state</span><span class="desc">Current robot state: Navigating / Idle</span></div>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Battery level</span><span class="desc">Percentage (e.g. 87 %)</span></div>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Speed</span><span class="desc">Current speed in m/s</span></div>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Position X / Y</span><span class="desc">Coordinates in metres</span></div>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Active task</span><span class="desc">Task ID currently being executed</span></div>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Connection status</span><span class="desc">Real-time connected / disconnected</span></div>
+      </div>
+      <div class="feat-section">
+        <h3>Control Buttons (each requires confirmation)</h3>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Pause</span><span class="desc">Pause the robot mid-movement</span></div>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Resume</span><span class="desc">Continue from paused state</span></div>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Dock Shelf</span><span class="desc">Robot picks up the shelf</span></div>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Undock Shelf</span><span class="desc">Robot puts the shelf down</span></div>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Return Home</span><span class="desc">Robot goes back to charger</span></div>
+        <div class="feat-row"><span class="dot">●</span><span class="label" style="color:#f87171;">Emergency Stop</span><span class="desc">Immediately stops all movement</span></div>
+      </div>
+      <div style="font-size:11.5px;color:#4b5563;margin-top:4px;">
+        ⚠ During an active task — only Pause / Resume / Emergency Stop are available. Manual move commands are blocked.
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div class="card">
+        <div style="font-size:11px;color:#4b5563;margin-bottom:10px;font-weight:600;">LIVE METRICS</div>
+        <div class="metric-grid">
+          <div class="mbox"><div class="mv">Idle</div><div class="ml">State</div></div>
+          <div class="mbox"><div class="mv" style="color:#4ade80;">87 %</div><div class="ml">Battery</div></div>
+          <div class="mbox"><div class="mv" style="color:#d1d5db;">0.45</div><div class="ml">m/s</div></div>
+          <div class="mbox"><div class="mv" style="color:#d1d5db;">2.30</div><div class="ml">Pos X (m)</div></div>
+          <div class="mbox"><div class="mv" style="color:#d1d5db;">1.12</div><div class="ml">Pos Y (m)</div></div>
+          <div class="mbox"><div class="mv" style="color:#4ade80;">ON</div><div class="ml">Connected</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div style="font-size:11px;color:#4b5563;margin-bottom:8px;font-weight:600;">CONTROLS</div>
+        <div class="pill-row">
+          <span class="btn-mock">⏸ Pause</span>
+          <span class="btn-mock green">▶ Resume</span>
+          <span class="btn-mock">📦 Dock</span>
+          <span class="btn-mock">↑ Undock</span>
+          <span class="btn-mock">🏠 Return Home</span>
+          <span class="btn-mock red">🚨 E-Stop</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ -->
+<!-- SLIDE 5 — CREATE TASK          -->
+<!-- ═══════════════════════════════ -->
+<div class="slide" id="s5">
+  <div class="sh">
+    <div class="tag">Page 4</div>
+    <h2>Create Task</h2>
+    <div class="bar"></div>
+  </div>
+
+  <div class="tc">
+    <div>
+      <div class="feat-section">
+        <h3>Form Fields</h3>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Pickup Location</span><span class="desc">Dropdown — select where the robot picks up</span></div>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Destination</span><span class="desc">Dropdown — select where to deliver</span></div>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Shelf Layer</span><span class="desc">Dropdown — only <span class="badge-mock bm-green">active</span> layers selectable. Disabled when no shelf is docked</span></div>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Verification Code</span><span class="desc">Min 4 characters. Required when a shelf layer is selected. Optional otherwise</span></div>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Receiver Name</span><span class="desc">Who receives the delivery (saved to task history)</span></div>
+      </div>
+      <div class="feat-section">
+        <h3>Actions</h3>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Submit</span><span class="desc">Adds task to queue — robot starts immediately if idle</span></div>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Reset</span><span class="desc">Clears all form fields</span></div>
+      </div>
+      <div class="feat-section">
+        <h3>Smart Validation</h3>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Shelf badge</span><span class="desc">Shows <span class="badge-mock bm-green">Shelf docked</span> or <span class="badge-mock bm-gray">No shelf</span> automatically</span></div>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Code required</span><span class="desc">Code field enforces min-4-char rule only when shelf layer is picked</span></div>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Inline errors</span><span class="desc">Error message shown below form if submission fails</span></div>
+      </div>
+    </div>
+
+    <div class="card" style="max-width:340px;">
+      <div style="font-size:11px;color:#4b5563;margin-bottom:14px;font-weight:600;">CREATE TASK FORM</div>
+      <div class="form-mock">
+        <div>
+          <div class="field-label">Pickup Location</div>
+          <div class="field-mock" style="display:flex;justify-content:space-between;">Room 503 <span style="color:#4b5563;">▾</span></div>
+        </div>
+        <div>
+          <div class="field-label">Destination</div>
+          <div class="field-mock" style="display:flex;justify-content:space-between;">Room 601 <span style="color:#4b5563;">▾</span></div>
+        </div>
+        <div>
+          <div class="field-label">Shelf Layer &nbsp;<span class="badge-mock bm-green">Shelf docked</span></div>
+          <div class="field-mock" style="display:flex;justify-content:space-between;">Layer 1 (active) <span style="color:#4b5563;">▾</span></div>
+        </div>
+        <div>
+          <div class="field-label">Verification Code</div>
+          <div class="field-mock">1234</div>
+        </div>
+        <div>
+          <div class="field-label">Receiver Name</div>
+          <div class="field-mock">Nguyen Van A</div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:6px;">
+          <span class="btn-mock gray">Reset</span>
+          <span class="btn-mock" style="flex:1;justify-content:center;">Submit Task</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ -->
+<!-- SLIDE 6 — TASK HISTORY         -->
+<!-- ═══════════════════════════════ -->
+<div class="slide" id="s6">
+  <div class="sh">
+    <div class="tag">Page 5</div>
+    <h2>Task History</h2>
+    <div class="bar"></div>
+  </div>
+
+  <div class="tc">
+    <div>
+      <div class="feat-section">
+        <h3>Filters &amp; Search</h3>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Status filter</span><span class="desc">All / Waiting / Running / Done / Cancelled / Failed</span></div>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Search by Task ID</span><span class="desc">Type a number to filter by task ID in real time</span></div>
+      </div>
+      <div class="feat-section">
+        <h3>Task List Table</h3>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Columns</span><span class="desc">Task ID · Pickup · Destination · Receiver · Status · Created time</span></div>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Click to view detail</span><span class="desc">Click any row to open the detail panel below</span></div>
+      </div>
+      <div class="feat-section">
+        <h3>Task Detail Panel (click a row)</h3>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Task info</span><span class="desc">Pickup · Destination · Receiver · Shelf layer · Created / Cancelled / Delivered timestamps</span></div>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Timeline</span><span class="desc">Step-by-step history of status changes with timestamps</span></div>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Retry button</span><span class="desc">Shown only for <span class="badge-mock bm-blue">Running</span> tasks — re-sends the move command if robot got stuck</span></div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div class="card">
+        <div style="display:flex;gap:6px;margin-bottom:10px;">
+          <span class="field-mock" style="font-size:11px;padding:4px 8px;">Status: All ▾</span>
+          <span class="field-mock" style="font-size:11px;padding:4px 8px;flex:1;">Search by ID...</span>
+        </div>
+        <table class="tbl">
+          <thead><tr><th>#</th><th>Pickup</th><th>Dest</th><th>Receiver</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr style="background:rgba(59,130,246,.06)"><td>#42</td><td>R 503</td><td>R 601</td><td>Nguyen A</td><td><span class="badge-mock bm-green">Done</span></td></tr>
+            <tr><td>#41</td><td>R 504</td><td>R 611</td><td>Tran B</td><td><span class="badge-mock bm-red">Failed</span></td></tr>
+            <tr><td>#40</td><td>R 601</td><td>R 503</td><td>Le C</td><td><span class="badge-mock bm-gray">Cancelled</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card" style="font-size:12px;color:#6b7280;line-height:1.8;">
+        <div style="color:#d1d5db;font-weight:600;margin-bottom:6px;">Task #42 — <span class="badge-mock bm-green">Done</span></div>
+        Pickup: Room 503 · Dest: Room 601 · Layer: 1<br>
+        Created: 14:05 · Picked up: 14:07 · Delivered: 14:12<br>
+        <div style="margin-top:8px;font-size:11px;color:#4b5563;">
+          ○ 14:05 — waiting<br>
+          ○ 14:06 — in_progress (going to pickup)<br>
+          ○ 14:12 — completed
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ -->
+<!-- SLIDE 7 — LOGS                 -->
+<!-- ═══════════════════════════════ -->
+<div class="slide" id="s7">
+  <div class="sh">
+    <div class="tag">Page 6</div>
+    <h2>Logs</h2>
+    <div class="bar"></div>
+  </div>
+
+  <div class="tc">
+    <div>
+      <div class="feat-section">
+        <h3>Filters</h3>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Robot filter</span><span class="desc">Show all robots or filter to a specific one (e.g. AMR-01)</span></div>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Keyword search</span><span class="desc">Type anything to filter log messages in real time</span></div>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Level pills</span><span class="desc">
+          <span class="badge-mock bm-gray">ALL</span> &nbsp;
+          <span class="badge-mock bm-blue">INFO</span> &nbsp;
+          <span class="badge-mock bm-yellow">WARN</span> &nbsp;
+          <span class="badge-mock bm-red">ERROR</span>
+        </span></div>
+      </div>
+      <div class="feat-section">
+        <h3>Log Table</h3>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Columns</span><span class="desc">Time · Level · Robot · Message</span></div>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Task ID link</span><span class="desc">If a log belongs to a task, the Task ID is shown as a link</span></div>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Real-time</span><span class="desc">New log entries appear instantly via Socket.io — no refresh needed</span></div>
+      </div>
+      <div class="feat-section">
+        <h3>What gets logged</h3>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Robot commands</span><span class="desc">Every move / dock / pause command sent to the robot</span></div>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Connection events</span><span class="desc">Connect / disconnect from robot</span></div>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Task events</span><span class="desc">Task started, arrived at pickup, delivered, failed, timed out</span></div>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Errors</span><span class="desc">gRPC errors, command rejections, robot errors</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;">
+        <span class="field-mock" style="font-size:11px;padding:4px 8px;">AMR-01 ▾</span>
+        <span class="field-mock" style="font-size:11px;padding:4px 8px;flex:1;">Search...</span>
+      </div>
+      <div style="display:flex;gap:6px;margin-bottom:10px;">
+        <span class="badge-mock bm-gray" style="cursor:pointer;padding:4px 10px;">ALL</span>
+        <span class="badge-mock bm-blue" style="cursor:pointer;padding:4px 10px;">INFO</span>
+        <span class="badge-mock bm-yellow" style="cursor:pointer;padding:4px 10px;">WARN</span>
+        <span class="badge-mock bm-red" style="cursor:pointer;padding:4px 10px;">ERROR</span>
+      </div>
+      <table class="tbl">
+        <thead><tr><th>Time</th><th>Level</th><th>Robot</th><th>Message</th></tr></thead>
+        <tbody>
+          <tr><td style="font-family:monospace;font-size:10px;">14:12:03</td><td><span class="badge-mock bm-green" style="font-size:10px;">INFO</span></td><td>AMR-01</td><td>Task #42 delivered to Room 601</td></tr>
+          <tr><td style="font-family:monospace;font-size:10px;">14:06:11</td><td><span class="badge-mock bm-blue" style="font-size:10px;">INFO</span></td><td>AMR-01</td><td>Move command sent → Room 503</td></tr>
+          <tr><td style="font-family:monospace;font-size:10px;">14:05:00</td><td><span class="badge-mock bm-yellow" style="font-size:10px;">WARN</span></td><td>AMR-01</td><td>Battery low: 18 %</td></tr>
+          <tr><td style="font-family:monospace;font-size:10px;">13:50:42</td><td><span class="badge-mock bm-red" style="font-size:10px;">ERROR</span></td><td>AMR-01</td><td>gRPC timeout — retrying...</td></tr>
+        </tbody>
+      </table>
+      <div style="font-size:11px;color:#374151;margin-top:8px;">New entries appear in real time via Socket.io</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ -->
+<!-- SLIDE 8 — SHELF MANAGEMENT     -->
+<!-- ═══════════════════════════════ -->
+<div class="slide" id="s8">
+  <div class="sh">
+    <div class="tag">Page 7</div>
+    <h2>Shelf Management</h2>
+    <div class="bar"></div>
+  </div>
+
+  <div class="tc">
+    <div>
+      <div class="feat-section">
+        <h3>Shelf Layer List</h3>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Layer number</span><span class="desc">Layer 1, Layer 2, Layer 3… (each is a physical level of the shelf)</span></div>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Status</span><span class="desc">
+          <span class="badge-mock bm-green">Active</span> ready to use &nbsp;
+          <span class="badge-mock bm-gray">Idle</span> disabled &nbsp;
+          <span class="badge-mock bm-yellow">Busy</span> currently in use
+        </span></div>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Max weight</span><span class="desc">Max load for that layer (kg)</span></div>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Available in task</span><span class="desc">✓ if Active — appears in Create Task dropdown</span></div>
+      </div>
+      <div class="feat-section">
+        <h3>Actions per Layer</h3>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Enable / Disable</span><span class="desc">Toggle the layer between Active and Idle</span></div>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Edit</span><span class="desc">Change max weight</span></div>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Delete</span><span class="desc">Remove the layer (only if Idle)</span></div>
+      </div>
+      <div class="feat-section">
+        <h3>Add New Layer</h3>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Add Layer button</span><span class="desc">Opens a form to set layer number and max weight</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div style="font-size:11px;color:#4b5563;font-weight:600;">SHELF #001 — LAYERS</div>
+        <span class="btn-mock" style="font-size:11px;padding:4px 10px;">+ Add Layer</span>
+      </div>
+      <table class="tbl">
+        <thead><tr><th>Layer</th><th>Status</th><th>Max Weight</th><th>In Task</th><th></th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Layer 1</td>
+            <td><span class="badge-mock bm-green">Active</span></td>
+            <td>5 kg</td>
+            <td style="color:#4ade80;">✓</td>
+            <td>
+              <span class="btn-mock gray" style="font-size:10px;padding:2px 6px;">Disable</span>
+              <span class="btn-mock gray" style="font-size:10px;padding:2px 6px;">Edit</span>
+            </td>
+          </tr>
+          <tr>
+            <td>Layer 2</td>
+            <td><span class="badge-mock bm-yellow">Busy</span></td>
+            <td>3 kg</td>
+            <td style="color:#f87171;">✗</td>
+            <td><span style="font-size:10px;color:#4b5563;">in use</span></td>
+          </tr>
+          <tr>
+            <td>Layer 3</td>
+            <td><span class="badge-mock bm-gray">Idle</span></td>
+            <td>5 kg</td>
+            <td style="color:#f87171;">✗</td>
+            <td>
+              <span class="btn-mock" style="font-size:10px;padding:2px 6px;">Enable</span>
+              <span class="btn-mock red" style="font-size:10px;padding:2px 6px;">Delete</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ -->
+<!-- SLIDE 9 — SETTINGS             -->
+<!-- ═══════════════════════════════ -->
+<div class="slide" id="s9">
+  <div class="sh">
+    <div class="tag">Page 8</div>
+    <h2>Settings</h2>
+    <div class="bar"></div>
+  </div>
+
+  <div class="tc">
+    <div>
+      <div class="feat-section">
+        <h3>Robot Settings</h3>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Robot Name</span><span class="desc">Set display name (e.g. AMR-01)</span></div>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Max Speed</span><span class="desc">Set the robot's top speed (e.g. 1.2 m/s)</span></div>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Battery Warning %</span><span class="desc">Threshold that triggers a low-battery alert</span></div>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Auto Return</span><span class="desc">Toggle — robot automatically returns to charger when idle</span></div>
+      </div>
+      <div class="feat-section">
+        <h3>System Settings</h3>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Pickup Timeout</span><span class="desc">Seconds allowed for robot to reach pickup location before timeout alert</span></div>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Delivery Timeout</span><span class="desc">Seconds allowed for robot to reach destination before timeout alert</span></div>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Language</span><span class="desc">Switch UI language: <b style="color:#d1d5db">English</b> / 繁體中文 — takes effect after Save</span></div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px;max-width:340px;">
+      <div class="card">
+        <div style="font-size:11px;color:#4b5563;margin-bottom:12px;font-weight:600;">ROBOT SETTINGS</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;">
+            <span style="color:#9ca3af;">Robot Name</span><div class="field-mock" style="width:120px;padding:4px 8px;font-size:11px;">AMR-01</div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;">
+            <span style="color:#9ca3af;">Max Speed</span><div class="field-mock" style="width:120px;padding:4px 8px;font-size:11px;">1.2 m/s</div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;">
+            <span style="color:#9ca3af;">Battery Warning</span><div class="field-mock" style="width:120px;padding:4px 8px;font-size:11px;">20 %</div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;">
+            <span style="color:#9ca3af;">Auto Return</span>
+            <div style="width:40px;height:22px;background:#3b82f6;border-radius:99px;position:relative;">
+              <div style="width:16px;height:16px;background:#fff;border-radius:50%;position:absolute;right:3px;top:3px;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div style="font-size:11px;color:#4b5563;margin-bottom:12px;font-weight:600;">SYSTEM SETTINGS</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;">
+            <span style="color:#9ca3af;">Pickup Timeout</span><div class="field-mock" style="width:80px;padding:4px 8px;font-size:11px;">60 sec</div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;">
+            <span style="color:#9ca3af;">Delivery Timeout</span><div class="field-mock" style="width:80px;padding:4px 8px;font-size:11px;">60 sec</div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;">
+            <span style="color:#9ca3af;">Language</span>
+            <div class="field-mock" style="width:120px;padding:4px 8px;font-size:11px;display:flex;justify-content:space-between;">English <span>▾</span></div>
+          </div>
+          <span class="btn-mock" style="margin-top:4px;">Save Settings</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ -->
+<!-- SLIDE 10 — USER MANAGEMENT     -->
+<!-- ═══════════════════════════════ -->
+<div class="slide" id="s10">
+  <div class="sh">
+    <div class="tag">Page 9</div>
+    <h2>User Management <span class="admin-tag">Admin only</span></h2>
+    <div class="bar"></div>
+  </div>
+
+  <div class="tc">
+    <div>
+      <div class="feat-section">
+        <h3>Create New User</h3>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Username</span><span class="desc">Enter a unique username</span></div>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Password</span><span class="desc">Min 8 characters, stored as bcrypt hash</span></div>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Create button</span><span class="desc">Creates account as <b style="color:#d1d5db;">User</b> role by default</span></div>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Duplicate check</span><span class="desc">Shows "Username already exists" if taken</span></div>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Success feedback</span><span class="desc">Green confirmation message shown after creation</span></div>
+      </div>
+      <div class="feat-section">
+        <h3>User List</h3>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Columns</span><span class="desc">Username · Date Created · Delete button</span></div>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Delete user</span><span class="desc">Remove a User account with confirmation. Admin accounts cannot be deleted</span></div>
+      </div>
+      <div class="feat-section">
+        <h3>Notes</h3>
+        <div class="feat-row"><span class="dot">●</span><span class="label">No email required</span><span class="desc">Accounts only need username + password</span></div>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Admin protected</span><span class="desc">Admin accounts do not show a Delete button</span></div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:12px;max-width:360px;">
+      <div class="card">
+        <div style="font-size:11px;color:#4b5563;margin-bottom:12px;font-weight:600;">CREATE USER</div>
+        <div class="form-mock">
+          <div><div class="field-label">Username</div><div class="field-mock">johndoe</div></div>
+          <div><div class="field-label">Password (min 8 chars)</div><div class="field-mock">••••••••</div></div>
+          <span class="btn-mock" style="margin-top:4px;">Create User</span>
+        </div>
+      </div>
+      <div class="card">
+        <div style="font-size:11px;color:#4b5563;margin-bottom:10px;font-weight:600;">USER LIST</div>
+        <table class="tbl">
+          <thead><tr><th>Username</th><th>Created</th><th></th></tr></thead>
+          <tbody>
+            <tr><td>admin</td><td>01/01/2026</td><td style="color:#4b5563;font-size:11px;">—</td></tr>
+            <tr><td>nguyen_a</td><td>15/03/2026</td><td><span class="btn-mock red" style="font-size:10px;padding:2px 6px;">✕</span></td></tr>
+            <tr><td>tran_b</td><td>20/04/2026</td><td><span class="btn-mock red" style="font-size:10px;padding:2px 6px;">✕</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ -->
+<!-- SLIDE 11 — CAMERA              -->
+<!-- ═══════════════════════════════ -->
+<div class="slide" id="s11">
+  <div class="sh">
+    <div class="tag">Page 10</div>
+    <h2>Camera <span class="admin-tag">Admin only</span></h2>
+    <div class="bar"></div>
+  </div>
+
+  <div class="tc4">
+    <div>
+      <div class="feat-section">
+        <h3>Camera Views</h3>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Front Camera</span><span class="desc">Forward-facing view from the robot</span></div>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Back Camera</span><span class="desc">Rear-facing view from the robot</span></div>
+        <div class="feat-row"><span class="dot">●</span><span class="label">ToF (Depth)</span><span class="desc">Time-of-Flight depth camera view</span></div>
+      </div>
+      <div class="feat-section">
+        <h3>Stream Controls</h3>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Tab switcher</span><span class="desc">Click Front / Back / ToF to switch camera instantly</span></div>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Loading spinner</span><span class="desc">Shown while the stream connects</span></div>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Retry button</span><span class="desc">If stream fails, a Retry button appears</span></div>
+      </div>
+      <div class="feat-section">
+        <h3>Stream Info</h3>
+        <div class="feat-row"><span class="dot">●</span><span class="label">LIVE indicator</span><span class="desc">Red blinking dot confirms the feed is live</span></div>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Frame rate</span><span class="desc">Approximately 10 fps</span></div>
+        <div class="feat-row"><span class="dot">●</span><span class="label">Access control</span><span class="desc">Only Admin can open this page</span></div>
+      </div>
+    </div>
+
+    <div class="card" style="max-width:380px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <div style="font-size:11px;color:#4b5563;font-weight:600;">LIVE CAMERA</div>
+        <div style="display:flex;gap:6px;">
+          <span class="btn-mock" style="font-size:11px;padding:4px 10px;">Front</span>
+          <span class="btn-mock gray" style="font-size:11px;padding:4px 10px;">Back</span>
+          <span class="btn-mock gray" style="font-size:11px;padding:4px 10px;">ToF</span>
+        </div>
+      </div>
+      <div style="background:#0d1117;border-radius:8px;min-height:220px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.05);">
+        <div style="text-align:center;color:#374151;font-size:13px;">
+          <div style="font-size:32px;margin-bottom:8px;">📷</div>
+          Front Camera Stream<br>
+          <span style="font-size:11px;">~10 fps</span>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;margin-top:10px;font-size:11px;color:#4b5563;">
+        <span style="width:7px;height:7px;border-radius:50%;background:#ef4444;display:inline-block;"></span>
+        LIVE · Front Camera · ~10 fps
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ -->
+<!-- SLIDE 12 — SUMMARY             -->
+<!-- ═══════════════════════════════ -->
+<div class="slide s-summary" id="s12">
+  <h2>Feature Summary</h2>
+  <p>10 pages — what each one does</p>
+
+  <div class="grid g2" style="max-width:780px;gap:10px;margin-bottom:36px;text-align:left;">
+    <div class="card" style="padding:14px 16px;">
+      <span style="font-size:11px;color:#60a5fa;font-weight:600;">1. Login / Register</span>
+      <p style="margin-top:4px;">Login, create account, role-based access</p>
+    </div>
+    <div class="card" style="padding:14px 16px;">
+      <span style="font-size:11px;color:#60a5fa;font-weight:600;">2. Dashboard</span>
+      <p style="margin-top:4px;">Floor map, robot state, task queue, live logs</p>
+    </div>
+    <div class="card" style="padding:14px 16px;">
+      <span style="font-size:11px;color:#60a5fa;font-weight:600;">3. Robot Status <span class="badge-mock bm-red" style="font-size:9px;">Admin</span></span>
+      <p style="margin-top:4px;">Battery, speed, position, 6 control buttons</p>
+    </div>
+    <div class="card" style="padding:14px 16px;">
+      <span style="font-size:11px;color:#60a5fa;font-weight:600;">4. Create Task</span>
+      <p style="margin-top:4px;">Pickup + destination + shelf + code + receiver</p>
+    </div>
+    <div class="card" style="padding:14px 16px;">
+      <span style="font-size:11px;color:#60a5fa;font-weight:600;">5. Task History</span>
+      <p style="margin-top:4px;">Filter, search, timeline detail, retry stuck tasks</p>
+    </div>
+    <div class="card" style="padding:14px 16px;">
+      <span style="font-size:11px;color:#60a5fa;font-weight:600;">6. Logs</span>
+      <p style="margin-top:4px;">INFO / WARN / ERROR, real-time via socket</p>
+    </div>
+    <div class="card" style="padding:14px 16px;">
+      <span style="font-size:11px;color:#60a5fa;font-weight:600;">7. Shelf Management</span>
+      <p style="margin-top:4px;">Add/enable/disable layers, set max weight</p>
+    </div>
+    <div class="card" style="padding:14px 16px;">
+      <span style="font-size:11px;color:#60a5fa;font-weight:600;">8. Settings</span>
+      <p style="margin-top:4px;">Robot config, timeouts, language switch</p>
+    </div>
+    <div class="card" style="padding:14px 16px;">
+      <span style="font-size:11px;color:#60a5fa;font-weight:600;">9. User Management <span class="badge-mock bm-red" style="font-size:9px;">Admin</span></span>
+      <p style="margin-top:4px;">Create / delete user accounts</p>
+    </div>
+    <div class="card" style="padding:14px 16px;">
+      <span style="font-size:11px;color:#60a5fa;font-weight:600;">10. Camera <span class="badge-mock bm-red" style="font-size:9px;">Admin</span></span>
+      <p style="margin-top:4px;">Front / Back / ToF live stream ~10 fps</p>
+    </div>
+  </div>
+
+  <div class="stat-row">
+    <div class="stat-box"><div class="n">10</div><div class="l">Pages</div></div>
+    <div class="stat-box"><div class="n">2</div><div class="l">Roles</div></div>
+    <div class="stat-box"><div class="n">6</div><div class="l">Robot Controls</div></div>
+    <div class="stat-box"><div class="n">3</div><div class="l">Camera Views</div></div>
+  </div>
+</div>
+
+<!-- nav -->
+<div class="nav">
+  <button class="nbtn" id="prev" onclick="go(-1)" disabled>‹</button>
+  <span id="ctr">1 / 12</span>
+  <button class="nbtn" id="next" onclick="go(1)">›</button>
+</div>
+
+<script>
+const N = 12; let c = 1;
+function go(d) {
+  const n = c + d;
+  if (n < 1 || n > N) return;
+  document.getElementById('s'+c).classList.remove('active');
+  c = n;
+  document.getElementById('s'+c).classList.add('active');
+  document.getElementById('ctr').textContent = c + ' / ' + N;
+  document.getElementById('prev').disabled = c === 1;
+  document.getElementById('next').disabled = c === N;
+  document.getElementById('bar').style.width = (c/N*100) + '%';
+}
+document.addEventListener('keydown', e => {
+  if (e.key==='ArrowRight'||e.key==='ArrowDown'||e.key===' ') go(1);
+  if (e.key==='ArrowLeft' ||e.key==='ArrowUp')               go(-1);
+});
+document.getElementById('bar').style.width = (1/N*100) + '%';
+</script>
+</body>
+</html>

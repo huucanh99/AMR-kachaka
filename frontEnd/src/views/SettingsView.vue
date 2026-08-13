@@ -60,6 +60,19 @@
         </div>
 
         <div class="setting-row">
+          <div>
+            <div class="setting-label">{{ t('settings.kachakaHost') }}</div>
+            <div class="setting-hint">{{ t('settings.kachakaHostHint') }}</div>
+          </div>
+          <input type="text" v-model="systemSettings.kachakaHost" style="width:150px;" placeholder="192.168.0.26" />
+        </div>
+
+        <div class="setting-row">
+          <div><div class="setting-label">{{ t('settings.kachakaPort') }}</div></div>
+          <input type="number" min="1" max="65535" v-model.number="systemSettings.kachakaPort" style="width:90px;" />
+        </div>
+
+        <div class="setting-row">
           <div><div class="setting-label">{{ t('settings.language') }}</div></div>
           <select v-model="systemSettings.language" style="width:150px;">
             <option value="en">English</option>
@@ -95,7 +108,9 @@ const robotSettings = ref({
 const systemSettings = ref({
   pickupTimeoutSeconds:   60,
   deliveryTimeoutSeconds: 60,
-  language: lang.value,  // khởi tạo từ localStorage, không phải 'en' cứng
+  language: lang.value,
+  kachakaHost: '192.168.0.26',
+  kachakaPort: 26400,
 })
 
 const loadingSettings = ref(true)
@@ -108,6 +123,8 @@ onMounted(async () => {
     const res = await getSettings()
     systemSettings.value.pickupTimeoutSeconds   = res.data.data.pickupTimeoutSeconds
     systemSettings.value.deliveryTimeoutSeconds = res.data.data.deliveryTimeoutSeconds
+    if (res.data.data.kachakaHost) systemSettings.value.kachakaHost = res.data.data.kachakaHost
+    if (res.data.data.kachakaPort) systemSettings.value.kachakaPort = res.data.data.kachakaPort
     // không gọi setLang ở đây — localStorage là source of truth
     // chỉ sync dropdown nếu backend có giá trị khác localStorage (vd đổi máy)
     if (res.data.data.language && res.data.data.language !== lang.value) {
@@ -134,6 +151,8 @@ async function saveSystem() {
       pickupTimeoutSeconds:   systemSettings.value.pickupTimeoutSeconds,
       deliveryTimeoutSeconds: systemSettings.value.deliveryTimeoutSeconds,
       language:               systemSettings.value.language,
+      kachakaHost:            systemSettings.value.kachakaHost,
+      kachakaPort:            systemSettings.value.kachakaPort,
     })
     setLang(systemSettings.value.language)
     saveOk.value = true

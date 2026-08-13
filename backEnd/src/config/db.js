@@ -132,7 +132,6 @@ async function initDb() {
     CREATE TABLE IF NOT EXISTS users (
       id         INTEGER PRIMARY KEY,
       username   TEXT    NOT NULL UNIQUE,
-      email      TEXT    NOT NULL UNIQUE,
       password   TEXT    NOT NULL,
       role       TEXT    NOT NULL DEFAULT 'operator',
       created_at TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -152,20 +151,19 @@ async function initDb() {
     db.exec('ALTER TABLE shelf_layers ADD COLUMN max_weight REAL NOT NULL DEFAULT 5.0');
   } catch (_) { /* column already exists — ignore */ }
 
-  // Migration: make users.email nullable (was NOT NULL UNIQUE)
+  // Migration: drop email column from users table
   try {
-    const schema = db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='users'").get();
-    if (schema && schema.sql.includes('email      TEXT    NOT NULL')) {
+    const cols = db.prepare("PRAGMA table_info(users)").all();
+    if (cols.some(c => c.name === 'email')) {
       db.exec(`
         CREATE TABLE users_new (
           id         INTEGER PRIMARY KEY,
           username   TEXT    NOT NULL UNIQUE,
-          email      TEXT    UNIQUE,
           password   TEXT    NOT NULL,
           role       TEXT    NOT NULL DEFAULT 'operator',
           created_at TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP
         );
-        INSERT INTO users_new SELECT id, username, email, password, role, created_at FROM users;
+        INSERT INTO users_new SELECT id, username, password, role, created_at FROM users;
         DROP TABLE users;
         ALTER TABLE users_new RENAME TO users;
       `);

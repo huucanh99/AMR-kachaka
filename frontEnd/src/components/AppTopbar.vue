@@ -46,6 +46,8 @@ const titleKeyMap = {
   'logs':             'title.logs',
   'settings':         'title.settings',
   'shelf-management': 'title.shelfManagement',
+  'camera':           'title.camera',
+  'map-management':   'title.mapManagement',
 }
 
 const title = computed(() => {

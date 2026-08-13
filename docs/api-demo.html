@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Kachaka AMR – Robot API Demo</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #222638;
+    --border: #2e3347;
+    --accent: #6c63ff;
+    --accent2: #00d4aa;
+    --danger: #ff4d6d;
+    --warn: #ffb347;
+    --text: #e2e8f0;
+    --muted: #8892a4;
+    --green: #22c55e;
+    --js-color: #f0db4f;
+    --c-color: #00adef;
+    --pm-color: #ff6c37;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+  .layout { display: grid; grid-template-columns: 220px 1fr 460px; min-height: 100vh; }
+
+  /* Sidebar */
+  .sidebar { background: var(--surface); border-right: 1px solid var(--border); overflow-y: auto; position: sticky; top: 0; height: 100vh; }
+  .sidebar-header { padding: 18px 16px 14px; border-bottom: 1px solid var(--border); }
+  .sidebar-logo { font-size: 17px; font-weight: 700; color: var(--accent); }
+  .sidebar-sub { font-size: 11px; color: var(--muted); margin-top: 3px; }
+  .nav-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); padding: 14px 16px 4px; }
+  .nav-item { display: flex; align-items: center; gap: 8px; padding: 9px 16px; font-size: 13px; cursor: pointer; color: var(--muted); border-left: 3px solid transparent; transition: all .15s; }
+  .nav-item:hover { color: var(--text); background: var(--surface2); }
+  .nav-item.active { color: var(--accent); border-left-color: var(--accent); background: rgba(108,99,255,.08); }
+  .badge { margin-left: auto; font-size: 10px; padding: 1px 6px; border-radius: 20px; font-weight: 600; }
+  .badge-get  { background: rgba(34,197,94,.15);  color: var(--green); }
+  .badge-post { background: rgba(108,99,255,.15); color: var(--accent); }
+
+  /* Main */
+  .main { padding: 24px; overflow-y: auto; }
+  .section { display: none; }
+  .section.active { display: block; }
+  .section-title { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+  .section-desc { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+
+  /* Card */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; margin-bottom: 14px; }
+  .card-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .card-desc { font-size: 12px; color: var(--muted); margin-bottom: 14px; }
+  .method-tag { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; flex-shrink: 0; }
+  .mt-get  { background: rgba(34,197,94,.15);  color: var(--green); }
+  .mt-post { background: rgba(108,99,255,.15); color: var(--accent); }
+  .endpoint-path { font-size: 12px; color: var(--muted); font-family: monospace; }
+
+  /* Form */
+  .form-row  { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  label { font-size: 12px; color: var(--muted); font-weight: 500; }
+  input, select { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 7px 10px; font-size: 13px; color: var(--text); outline: none; width: 100%; transition: border-color .15s; }
+  input:focus, select:focus { border-color: var(--accent); }
+
+  /* Buttons */
+  .btn { padding: 8px 18px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: all .15s; display: inline-flex; align-items: center; gap: 6px; }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: #5a52e0; }
+  .btn-danger  { background: var(--danger); color: #fff; }
+  .btn-danger:hover { background: #e0334d; }
+  .btn-warn    { background: var(--warn); color: #1a1d27; }
+  .btn-warn:hover { background: #e0a030; }
+  .btn-ghost   { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+  .quick-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+
+  /* Topbar */
+  .topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 10px 20px; display: flex; align-items: center; gap: 14px; font-size: 13px; }
+
+  /* Config bar */
+  .config-bar { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 16px; margin-bottom: 18px; display: flex; align-items: center; gap: 10px; }
+  .config-bar input { flex: 1; }
+  .config-bar label { white-space: nowrap; font-size: 12px; color: var(--muted); }
+
+  /* Alert */
+  .alert { padding: 10px 14px; border-radius: 6px; font-size: 13px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .alert-danger { background: rgba(255,77,109,.1); border: 1px solid rgba(255,77,109,.3); color: var(--danger); }
+
+  /* Code Panel */
+  .code-panel { background: var(--surface); border-left: 1px solid var(--border); display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; overflow: hidden; }
+  .code-panel-header { padding: 14px 18px 0; border-bottom: 1px solid var(--border); }
+  .code-panel-header h3 { font-size: 14px; font-weight: 600; margin-bottom: 10px; color: var(--muted); }
+  .code-panel-header h3 span { color: var(--text); }
+  .tab-bar { display: flex; }
+  .tab { padding: 8px 18px; font-size: 13px; font-weight: 600; cursor: pointer; border-bottom: 2px solid transparent; color: var(--muted); transition: all .15s; display: flex; align-items: center; gap: 6px; }
+  .tab:hover { color: var(--text); }
+  .tab.active-js { color: var(--js-color); border-bottom-color: var(--js-color); }
+  .tab.active-c  { color: var(--c-color);  border-bottom-color: var(--c-color); }
+  .tab.active-pm { color: var(--pm-color); border-bottom-color: var(--pm-color); }
+  .tab-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .dot-js { background: var(--js-color); }
+  .dot-c  { background: var(--c-color); }
+  .dot-pm { background: var(--pm-color); }
+  .code-body { flex: 1; overflow-y: auto; }
+  .code-pane { display: none; padding: 16px; }
+  .code-pane.active { display: block; }
+  .code-wrap { position: relative; }
+  .copy-btn { position: absolute; top: 8px; right: 8px; padding: 4px 10px; font-size: 11px; border-radius: 4px; background: var(--surface2); border: 1px solid var(--border); color: var(--muted); cursor: pointer; }
+  .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+  pre { font-family: 'Cascadia Code','Fira Code','Consolas',monospace; font-size: 12px; line-height: 1.75; white-space: pre; overflow-x: auto; }
+  .kw  { color: #cc99cd; } .fn  { color: #6c99bb; } .str { color: #7ec699; }
+  .num { color: #f8c291; } .cmt { color: #5c6370; font-style:italic; }
+  .var { color: #e2e8f0; } .type{ color: #e5c07b; } .punc{ color: #abb2bf; }
+  .code-panel-footer { padding: 10px 18px; border-top: 1px solid var(--border); font-size: 11px; color: var(--muted); }
+  .idle-msg { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 300px; gap: 12px; color: var(--muted); text-align: center; padding: 40px; }
+  .idle-icon { font-size: 40px; opacity: .25; }
+
+  /* Postman steps */
+  .pm-steps { display: flex; flex-direction: column; gap: 10px; }
+  .pm-step { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .pm-step-head { display: flex; align-items: center; gap: 10px; padding: 9px 14px; border-bottom: 1px solid var(--border); background: rgba(255,108,55,.06); }
+  .pm-step-num { width: 22px; height: 22px; border-radius: 50%; background: var(--pm-color); color: #fff; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .pm-step-title { font-size: 12px; font-weight: 700; color: var(--pm-color); }
+  .pm-step-body { padding: 12px 14px; }
+  .pm-row { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 7px; font-size: 12px; }
+  .pm-row:last-child { margin-bottom: 0; }
+  .pm-key { color: var(--muted); min-width: 100px; flex-shrink: 0; font-weight: 500; padding-top: 3px; }
+  .pm-val { font-family: monospace; font-size: 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 4px 8px; color: var(--text); word-break: break-all; flex: 1; }
+  .pm-val.m-get  { color: var(--green);  background: rgba(34,197,94,.08);  border-color: rgba(34,197,94,.2); }
+  .pm-val.m-post { color: var(--accent); background: rgba(108,99,255,.08); border-color: rgba(108,99,255,.2); }
+  .pm-note { font-size: 11px; color: var(--muted); margin-top: 6px; font-style: italic; }
+  .pm-json { font-family: monospace; font-size: 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 10px; color: #7ec699; white-space: pre; overflow-x: auto; margin-top: 6px; }
+  .pm-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .pm-table th { text-align: left; color: var(--muted); font-weight: 600; padding: 4px 8px; border-bottom: 1px solid var(--border); font-size: 11px; }
+  .pm-table td { padding: 5px 8px; font-family: monospace; }
+  .pm-table tr:not(:last-child) td { border-bottom: 1px solid rgba(46,51,71,.5); }
+  .pm-hint { background: rgba(0,212,170,.08); border: 1px solid rgba(0,212,170,.2); border-radius: 6px; padding: 8px 12px; font-size: 12px; color: var(--accent2); margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="layout">
+
+<!-- ══ SIDEBAR ══ -->
+<nav class="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">🤖 Kachaka AMR</div>
+    <div class="sidebar-sub">Robot API Demo</div>
+  </div>
+
+  <div class="nav-label">Robot Info</div>
+  <div class="nav-item active" data-section="status">📊 Status <span class="badge badge-get">GET</span></div>
+  <div class="nav-item" data-section="battery">🔋 Battery <span class="badge badge-get">GET</span></div>
+
+  <div class="nav-label">Location</div>
+  <div class="nav-item" data-section="locations">📍 Locations <span class="badge badge-get">GET</span></div>
+  <div class="nav-item" data-section="shelves">🗂️ Shelves <span class="badge badge-get">GET</span></div>
+
+  <div class="nav-label">Map</div>
+  <div class="nav-item" data-section="map">🗺️ Map <span class="badge badge-get">GET</span></div>
+
+  <div class="nav-label">Camera</div>
+  <div class="nav-item" data-section="camera">📷 Camera <span class="badge badge-get">GET</span></div>
+
+  <div class="nav-label">Commands</div>
+  <div class="nav-item" data-section="move">🚗 Move <span class="badge badge-post">POST</span></div>
+  <div class="nav-item" data-section="controls">🎮 Controls <span class="badge badge-post">POST</span></div>
+</nav>
+
+<!-- ══ MAIN ══ -->
+<div style="display:flex;flex-direction:column;overflow:hidden;">
+  <div class="topbar">
+    <span style="font-weight:600;">Fill in fields → click button → see code</span>
+  </div>
+
+  <div class="main" style="flex:1;overflow-y:auto;">
+    <div class="config-bar">
+      <label>Base URL:</label>
+      <input id="baseUrl" value="http://192.168.0.131:3000/api" />
+    </div>
+
+    <!-- STATUS -->
+    <div class="section active" id="section-status">
+      <div class="section-title">📊 Robot Status</div>
+      <div class="section-desc">Get the robot's current position, battery level, and command state all in one call.</div>
+      <div class="card">
+        <div class="card-title"><span class="method-tag mt-get">GET</span> Full Status <span class="endpoint-path">/robot/status</span></div>
+        <div class="card-desc">Returns pose, battery percentage, and what command the robot is currently running.</div>
+        <button class="btn btn-primary" onclick='showCode("STATUS")'>👁 Show Code</button>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="method-tag mt-get">GET</span> Ready Check <span class="endpoint-path">/robot/ready</span></div>
+        <div class="card-desc">Quick check — is the robot online and ready to accept commands?</div>
+        <button class="btn btn-ghost" onclick='showCode("READY")'>👁 Show Code</button>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="method-tag mt-get">GET</span> Current Pose <span class="endpoint-path">/robot/pose</span></div>
+        <div class="card-desc">Returns the robot's X/Y position and heading angle on the map.</div>
+        <button class="btn btn-ghost" onclick='showCode("POSE")'>👁 Show Code</button>
+      </div>
+    </div>
+
+    <!-- BATTERY -->
+    <div class="section" id="section-battery">
+      <div class="section-title">🔋 Battery</div>
+      <div class="section-desc">Check the robot's battery percentage and charging status.</div>
+      <div class="card">
+        <div class="card-title"><span class="method-tag mt-get">GET</span> Battery Info <span class="endpoint-path">/robot/battery</span></div>
+        <div class="card-desc">Returns percentage and power supply status (charging / discharging).</div>
+        <button class="btn btn-primary" onclick='showCode("BATTERY")'>👁 Show Code</button>
+      </div>
+    </div>
+
+    <!-- LOCATIONS -->
+    <div class="section" id="section-locations">
+      <div class="section-title">📍 Locations</div>
+      <div class="section-desc">Get all named locations registered on the robot's map. Use these IDs to send move commands.</div>
+      <div class="card">
+        <div class="card-title"><span class="method-tag mt-get">GET</span> All Locations <span class="endpoint-path">/robot/locations</span></div>
+        <div class="card-desc">Returns a list of locations with their IDs and names.</div>
+        <button class="btn btn-primary" onclick='showCode("LOCATIONS")'>👁 Show Code</button>
+      </div>
+    </div>
+
+    <!-- SHELVES -->
+    <div class="section" id="section-shelves">
+      <div class="section-title">🗂️ Shelves</div>
+      <div class="section-desc">Get all shelves the robot knows about, and check which shelf it is currently carrying.</div>
+      <div class="card">
+        <div class="card-title"><span class="method-tag mt-get">GET</span> All Shelves <span class="endpoint-path">/robot/shelves</span></div>
+        <div class="card-desc">Returns a list of shelves with their IDs and names.</div>
+        <button class="btn btn-primary" onclick='showCode("SHELVES")'>👁 Show Code</button>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="method-tag mt-get">GET</span> Moving Shelf <span class="endpoint-path">/robot/moving-shelf</span></div>
+        <div class="card-desc">Returns the shelf the robot is currently carrying, or null if none.</div>
+        <button class="btn btn-ghost" onclick='showCode("MOVING_SHELF")'>👁 Show Code</button>
+      </div>
+    </div>
+
+    <!-- MAP -->
+    <div class="section" id="section-map">
+      <div class="section-title">🗺️ Map</div>
+      <div class="section-desc">Get the robot's current map as a PNG image and list all available maps.</div>
+      <div class="card">
+        <div class="card-title"><span class="method-tag mt-get">GET</span> List Maps <span class="endpoint-path">/robot/maps</span></div>
+        <div class="card-desc">Returns all available maps and the ID of the currently active map.</div>
+        <button class="btn btn-primary" onclick='showCode("MAPS")'>👁 Show Code</button>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="method-tag mt-get">GET</span> Map PNG <span class="endpoint-path">/robot/maps/png</span></div>
+        <div class="card-desc">Returns the current map as a base64 PNG image with width, height, and resolution.</div>
+        <button class="btn btn-ghost" onclick='showCode("MAP_PNG")'>👁 Show Code</button>
+      </div>
+    </div>
+
+    <!-- MOVE -->
+    <div class="section" id="section-move">
+      <div class="section-title">🚗 Move to Location</div>
+      <div class="section-desc">Send the robot to a named location. Get location IDs from the Locations endpoint first.</div>
+      <div class="card">
+        <div class="card-title"><span class="method-tag mt-post">POST</span> Move <span class="endpoint-path">/robot/move</span></div>
+        <div class="card-desc">Robot starts moving to the specified location immediately.</div>
+        <div class="form-grid">
+          <div class="form-row">
+            <label>Location ID</label>
+            <input id="move-locId" placeholder="e.g. location-abc123" />
+          </div>
+          <div class="form-row">
+            <label>TTS on arrival (optional)</label>
+            <input id="move-tts" placeholder="e.g. Robot has arrived" />
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick='showCode("MOVE")'>👁 Show Code</button>
+      </div>
+    </div>
+
+    <!-- CAMERA -->
+    <div class="section" id="section-camera">
+      <div class="section-title">📷 Camera</div>
+      <div class="section-desc">Live MJPEG video stream from the robot's cameras. Streams directly into an &lt;img&gt; tag in any browser — no extra libraries needed.</div>
+      <div class="card">
+        <div class="card-title">Select Camera</div>
+        <div class="card-desc">Side options: <code style="color:var(--accent2)">front</code> · <code style="color:var(--accent2)">back</code> · <code style="color:var(--accent2)">tof</code> (depth sensor)</div>
+        <div class="quick-actions">
+          <button class="btn btn-primary" onclick='showCamera("front")'>📷 Front</button>
+          <button class="btn btn-ghost"   onclick='showCamera("back")'>🔙 Back</button>
+          <button class="btn btn-ghost"   onclick='showCamera("tof")'>📡 ToF Depth</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Live Preview</div>
+        <div class="card-desc">Requires robot to be online. Click a camera button above first.</div>
+        <div id="camera-preview" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;min-height:120px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px;overflow:hidden;">
+          Select a camera to preview
+        </div>
+        <button class="btn btn-ghost" style="margin-top:10px;" onclick="stopCamera()">⏹ Stop Stream</button>
+      </div>
+    </div>
+
+    <!-- CONTROLS -->
+    <div class="section" id="section-controls">
+      <div class="section-title">🎮 Controls</div>
+      <div class="section-desc">Control the robot's movement — pause, resume, return home, or emergency stop.</div>
+      <div class="alert alert-danger">⚠️ <strong>Emergency Stop</strong> halts the robot immediately.</div>
+      <div class="card">
+        <div class="card-title">Quick Commands</div>
+        <div class="quick-actions">
+          <button class="btn btn-ghost"  onclick='showCode("RETURN_HOME")'>🏠 Return Home</button>
+          <button class="btn btn-warn"   onclick='showCode("PAUSE")'>⏸️ Pause</button>
+          <button class="btn btn-ghost"  onclick='showCode("RESUME")'>▶️ Resume</button>
+          <button class="btn btn-danger" onclick='showCode("ESTOP")'>🛑 Emergency Stop</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ CODE PANEL ══ -->
+<div class="code-panel">
+  <div class="code-panel-header">
+    <h3>Code <span id="codeLabel"></span></h3>
+    <div class="tab-bar">
+      <div class="tab active-js" id="tab-js" onclick="switchTab('js')"><span class="tab-dot dot-js"></span> JavaScript</div>
+      <div class="tab" id="tab-c"  onclick="switchTab('c')"><span class="tab-dot dot-c"></span> C (libcurl)</div>
+      <div class="tab" id="tab-pm" onclick="switchTab('pm')"><span class="tab-dot dot-pm"></span> Postman</div>
+    </div>
+  </div>
+  <div class="code-body">
+    <div class="code-pane active" id="pane-js">
+      <div class="idle-msg"><div class="idle-icon">👈</div><p>Click a button on the left<br>to generate code</p></div>
+    </div>
+    <div class="code-pane" id="pane-c">
+      <div class="idle-msg"><div class="idle-icon">👈</div><p>Click a button on the left<br>to generate code</p></div>
+    </div>
+    <div class="code-pane" id="pane-pm">
+      <div class="idle-msg"><div class="idle-icon">👈</div><p>Click a button on the left<br>to generate code</p></div>
+    </div>
+  </div>
+  <div class="code-panel-footer" id="codeFooter">Select an endpoint to get started</div>
+</div>
+
+</div><!-- /layout -->
+
+<script>
+const v    = id => document.getElementById(id)?.value?.trim() || '';
+const base = ()  => v('baseUrl') || 'http://192.168.0.131:3000/api';
+const esc  = s   => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+// Navigation
+document.querySelectorAll('.nav-item').forEach(el => {
+  el.addEventListener('click', () => {
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('section-' + el.dataset.section)?.classList.add('active');
+  });
+});
+
+// Tabs
+let currentTab = 'js';
+function switchTab(tab) {
+  currentTab = tab;
+  ['js','c','pm'].forEach(t => {
+    document.getElementById('pane-'+t).classList.toggle('active', t === tab);
+  });
+  document.getElementById('tab-js').className = 'tab' + (tab==='js' ? ' active-js' : '');
+  document.getElementById('tab-c' ).className = 'tab' + (tab==='c'  ? ' active-c'  : '');
+  document.getElementById('tab-pm').className = 'tab' + (tab==='pm' ? ' active-pm' : '');
+}
+
+// Copy
+function copyCode(tab) {
+  const pane = document.getElementById('pane-'+tab);
+  let text = '';
+  if (tab === 'pm') {
+    const lines = [];
+    pane.querySelectorAll('.pm-row').forEach(r => {
+      const k = r.querySelector('.pm-key')?.innerText || '';
+      const v = r.querySelector('.pm-val')?.innerText || '';
+      if (k||v) lines.push(k + '\t' + v);
+    });
+    pane.querySelectorAll('.pm-json').forEach(el => lines.push('\nBody:\n' + el.innerText));
+    text = lines.join('\n');
+  } else {
+    text = pane.querySelector('pre')?.innerText || '';
+  }
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = pane.querySelector('.copy-btn');
+    if (btn) { btn.textContent = 'Copied!'; setTimeout(() => btn.textContent = 'Copy', 1500); }
+  });
+}
+
+// ── JS generator ──────────────────────────────────────────────
+function genJS(method, path, body, label) {
+  const hasBody = body && method !== 'GET';
+  const lines = [];
+  lines.push(`<span class="cmt">// ${label}</span>`);
+  lines.push(``);
+  lines.push(`<span class="kw">const</span> <span class="var">BASE_URL</span> <span class="punc">=</span> <span class="str">"${base()}"</span><span class="punc">;</span>`);
+  lines.push(``);
+  lines.push(`<span class="kw">async function</span> <span class="fn">main</span><span class="punc">() {</span>`);
+  lines.push(`  <span class="kw">const</span> <span class="var">res</span> <span class="punc">=</span> <span class="kw">await</span> <span class="fn">fetch</span><span class="punc">(</span><span class="str">\`\${BASE_URL}${path}\`</span><span class="punc">, {</span>`);
+  lines.push(`    <span class="var">method</span><span class="punc">:</span> <span class="str">"${method}"</span><span class="punc">,</span>`);
+  lines.push(`    <span class="var">headers</span><span class="punc">: {</span> <span class="str">"Content-Type"</span><span class="punc">:</span> <span class="str">"application/json"</span> <span class="punc">},</span>`);
+  if (hasBody) {
+    lines.push(`    <span class="var">body</span><span class="punc">: JSON.stringify(</span>${esc(JSON.stringify(body))}<span class="punc">),</span>`);
+  }
+  lines.push(`  <span class="punc">});</span>`);
+  lines.push(`  <span class="kw">const</span> <span class="var">data</span> <span class="punc">=</span> <span class="kw">await</span> <span class="var">res</span><span class="punc">.</span><span class="fn">json</span><span class="punc">();</span>`);
+  lines.push(`  <span class="var">console</span><span class="punc">.</span><span class="fn">log</span><span class="punc">(</span><span class="var">data</span><span class="punc">);</span>`);
+  lines.push(`<span class="punc">}</span>`);
+  lines.push(``);
+  lines.push(`<span class="fn">main</span><span class="punc">();</span>`);
+  return lines.join('\n');
+}
+
+// ── C generator ───────────────────────────────────────────────
+function genC(method, path, body, label) {
+  const url = base() + path;
+  const hasBody = body && method !== 'GET';
+  const bodyJson = hasBody ? JSON.stringify(body).replace(/"/g,'\\"') : null;
+  const lines = [];
+  lines.push(`<span class="cmt">/* ${label} — compile: gcc main.c -o main -lcurl */</span>`);
+  lines.push(``);
+  lines.push(`<span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>`);
+  lines.push(`<span class="kw">#include</span> <span class="str">&lt;stdlib.h&gt;</span>`);
+  lines.push(`<span class="kw">#include</span> <span class="str">&lt;curl/curl.h&gt;</span>`);
+  lines.push(``);
+  lines.push(`<span class="kw">typedef struct</span> <span class="punc">{</span> <span class="type">char</span> <span class="punc">*</span><span class="var">data</span><span class="punc">;</span> <span class="type">size_t</span> <span class="var">size</span><span class="punc">; }</span> <span class="type">Buf</span><span class="punc">;</span>`);
+  lines.push(`<span class="kw">static</span> <span class="type">size_t</span> <span class="fn">cb</span><span class="punc">(</span><span class="type">void</span><span class="punc">*</span><span class="var">p</span><span class="punc">,</span><span class="type">size_t</span> <span class="var">s</span><span class="punc">,</span><span class="type">size_t</span> <span class="var">n</span><span class="punc">,</span><span class="type">Buf</span><span class="punc">*</span><span class="var">b</span><span class="punc">) {</span>`);
+  lines.push(`  <span class="var">b</span><span class="punc">-&gt;</span><span class="var">data</span><span class="punc">=</span><span class="fn">realloc</span><span class="punc">(</span><span class="var">b</span><span class="punc">-&gt;</span><span class="var">data</span><span class="punc">,</span><span class="var">b</span><span class="punc">-&gt;</span><span class="var">size</span><span class="punc">+</span><span class="var">s</span><span class="punc">*</span><span class="var">n</span><span class="punc">+</span><span class="num">1</span><span class="punc">);</span>`);
+  lines.push(`  <span class="fn">memcpy</span><span class="punc">(</span><span class="var">b</span><span class="punc">-&gt;</span><span class="var">data</span><span class="punc">+</span><span class="var">b</span><span class="punc">-&gt;</span><span class="var">size</span><span class="punc">,</span><span class="var">p</span><span class="punc">,</span><span class="var">s</span><span class="punc">*</span><span class="var">n</span><span class="punc">);</span> <span class="var">b</span><span class="punc">-&gt;</span><span class="var">size</span><span class="punc">+=</span><span class="var">s</span><span class="punc">*</span><span class="var">n</span><span class="punc">;</span>`);
+  lines.push(`  <span class="var">b</span><span class="punc">-&gt;</span><span class="var">data</span><span class="punc">[</span><span class="var">b</span><span class="punc">-&gt;</span><span class="var">size</span><span class="punc">]=</span><span class="str">'\\0'</span><span class="punc">;</span> <span class="kw">return</span> <span class="var">s</span><span class="punc">*</span><span class="var">n</span><span class="punc">;</span>`);
+  lines.push(`<span class="punc">}</span>`);
+  lines.push(``);
+  lines.push(`<span class="type">int</span> <span class="fn">main</span><span class="punc">() {</span>`);
+  lines.push(`  <span class="fn">curl_global_init</span><span class="punc">(</span><span class="var">CURL_GLOBAL_ALL</span><span class="punc">);</span>`);
+  lines.push(`  <span class="type">CURL</span><span class="punc">*</span><span class="var">curl</span> <span class="punc">=</span> <span class="fn">curl_easy_init</span><span class="punc">();</span>`);
+  lines.push(`  <span class="type">Buf</span> <span class="var">buf</span> <span class="punc">= {</span><span class="fn">calloc</span><span class="punc">(</span><span class="num">1</span><span class="punc">,</span><span class="num">1</span><span class="punc">),</span><span class="num">0</span><span class="punc">};</span>`);
+  lines.push(``);
+  lines.push(`  <span class="type">struct</span> <span class="type">curl_slist</span><span class="punc">*</span><span class="var">h</span> <span class="punc">=</span> <span class="fn">curl_slist_append</span><span class="punc">(</span><span class="var">NULL</span><span class="punc">,</span><span class="str">"Content-Type: application/json"</span><span class="punc">);</span>`);
+  lines.push(`  <span class="fn">curl_easy_setopt</span><span class="punc">(</span><span class="var">curl</span><span class="punc">,</span><span class="var">CURLOPT_URL</span><span class="punc">,</span><span class="str">"${esc(url)}"</span><span class="punc">);</span>`);
+  lines.push(`  <span class="fn">curl_easy_setopt</span><span class="punc">(</span><span class="var">curl</span><span class="punc">,</span><span class="var">CURLOPT_HTTPHEADER</span><span class="punc">,</span><span class="var">h</span><span class="punc">);</span>`);
+  lines.push(`  <span class="fn">curl_easy_setopt</span><span class="punc">(</span><span class="var">curl</span><span class="punc">,</span><span class="var">CURLOPT_WRITEFUNCTION</span><span class="punc">,</span><span class="var">cb</span><span class="punc">);</span>`);
+  lines.push(`  <span class="fn">curl_easy_setopt</span><span class="punc">(</span><span class="var">curl</span><span class="punc">,</span><span class="var">CURLOPT_WRITEDATA</span><span class="punc">,&amp;</span><span class="var">buf</span><span class="punc">);</span>`);
+  if (method === 'POST') {
+    lines.push(`  <span class="fn">curl_easy_setopt</span><span class="punc">(</span><span class="var">curl</span><span class="punc">,</span><span class="var">CURLOPT_POST</span><span class="punc">,</span><span class="num">1L</span><span class="punc">);</span>`);
+    lines.push(`  <span class="fn">curl_easy_setopt</span><span class="punc">(</span><span class="var">curl</span><span class="punc">,</span><span class="var">CURLOPT_POSTFIELDS</span><span class="punc">,</span><span class="str">"${esc(bodyJson||'{}')}"</span><span class="punc">);</span>`);
+  }
+  lines.push(``);
+  lines.push(`  <span class="fn">curl_easy_perform</span><span class="punc">(</span><span class="var">curl</span><span class="punc">);</span>`);
+  lines.push(`  <span class="fn">printf</span><span class="punc">(</span><span class="str">"%s\\n"</span><span class="punc">,</span><span class="var">buf.data</span><span class="punc">);</span>`);
+  lines.push(``);
+  lines.push(`  <span class="fn">free</span><span class="punc">(</span><span class="var">buf.data</span><span class="punc">);</span>`);
+  lines.push(`  <span class="fn">curl_slist_free_all</span><span class="punc">(</span><span class="var">h</span><span class="punc">);</span>`);
+  lines.push(`  <span class="fn">curl_easy_cleanup</span><span class="punc">(</span><span class="var">curl</span><span class="punc">);</span>`);
+  lines.push(`  <span class="fn">curl_global_cleanup</span><span class="punc">();</span>`);
+  lines.push(`  <span class="kw">return</span> <span class="num">0</span><span class="punc">;</span>`);
+  lines.push(`<span class="punc">}</span>`);
+  return lines.join('\n');
+}
+
+// ── Postman generator ─────────────────────────────────────────
+function genPostman(method, path, body, label) {
+  const url = base() + path;
+  const hasBody = body && method !== 'GET' && Object.keys(body).length > 0;
+  const mc = method === 'GET' ? 'm-get' : 'm-post';
+  let html = `<div class="pm-steps">`;
+
+  html += `<div class="pm-step">
+    <div class="pm-step-head"><div class="pm-step-num">1</div><div class="pm-step-title">Method &amp; URL</div></div>
+    <div class="pm-step-body">
+      <div class="pm-row"><span class="pm-key">Method</span><span class="pm-val ${mc}">${method}</span></div>
+      <div class="pm-row"><span class="pm-key">URL</span><span class="pm-val">${esc(url)}</span></div>
+    </div>
+  </div>`;
+
+  html += `<div class="pm-step">
+    <div class="pm-step-head"><div class="pm-step-num">2</div><div class="pm-step-title">Headers tab</div></div>
+    <div class="pm-step-body">
+      <table class="pm-table">
+        <thead><tr><th>KEY</th><th>VALUE</th></tr></thead>
+        <tbody><tr><td>Content-Type</td><td>application/json</td></tr></tbody>
+      </table>
+      <div class="pm-note">No Authorization header needed for robot endpoints.</div>
+    </div>
+  </div>`;
+
+  if (hasBody) {
+    html += `<div class="pm-step">
+      <div class="pm-step-head"><div class="pm-step-num">3</div><div class="pm-step-title">Body → raw → JSON</div></div>
+      <div class="pm-step-body">
+        <pre class="pm-json">${esc(JSON.stringify(body, null, 2))}</pre>
+      </div>
+    </div>`;
+  }
+
+  const step = hasBody ? 4 : 3;
+  html += `<div class="pm-step">
+    <div class="pm-step-head"><div class="pm-step-num">${step}</div><div class="pm-step-title">Click Send</div></div>
+    <div class="pm-step-body">
+      <div class="pm-row"><span class="pm-key">Success</span><span class="pm-val" style="color:var(--green)">200 — { "success": true, "data": ... }</span></div>
+      <div class="pm-row"><span class="pm-key">Robot off</span><span class="pm-val" style="color:var(--danger)">500 — ETIMEDOUT / UNAVAILABLE</span></div>
+    </div>
+  </div>`;
+
+  html += `<div class="pm-hint">💡 Tip: save <code>base_url = ${esc(base())}</code> in a Postman Environment, then use <code>{{base_url}}${esc(path)}</code></div>`;
+  html += `</div>`;
+  return html;
+}
+
+// ── Render ────────────────────────────────────────────────────
+function render(label, method, path, body) {
+  document.getElementById('codeLabel').textContent = '— ' + label;
+  document.getElementById('codeFooter').textContent = `${method} ${base()}${path}`;
+
+  document.getElementById('pane-js').innerHTML =
+    `<div class="code-wrap"><button class="copy-btn" onclick="copyCode('js')">Copy</button><pre>${genJS(method,path,body,label)}</pre></div>`;
+  document.getElementById('pane-c').innerHTML =
+    `<div class="code-wrap"><button class="copy-btn" onclick="copyCode('c')">Copy</button><pre>${genC(method,path,body,label)}</pre></div>`;
+  document.getElementById('pane-pm').innerHTML =
+    `<div class="code-wrap" style="padding:4px 0"><button class="copy-btn" onclick="copyCode('pm')">Copy</button>${genPostman(method,path,body,label)}</div>`;
+}
+
+// ── Camera ────────────────────────────────────────────────────
+function showCamera(side) {
+  const url  = base() + '/robot/camera/' + side;
+  const label = (side === 'front' ? 'Front' : side === 'back' ? 'Back' : 'ToF Depth') + ' Camera';
+
+  // Live preview
+  const preview = document.getElementById('camera-preview');
+  preview.innerHTML = `<img src="${url}" style="max-width:100%;border-radius:6px;" alt="${label} stream" onerror="this.parentElement.innerHTML='<span style=color:var(--danger)>⚠️ Camera unavailable — check robot connection</span>'" />`;
+
+  document.getElementById('codeLabel').textContent = '— ' + label;
+  document.getElementById('codeFooter').textContent = 'GET ' + url;
+
+  // JS pane
+  const jsCode = [
+    `<span class="cmt">// ${label} — MJPEG live stream</span>`,
+    `<span class="cmt">// MJPEG works natively as an &lt;img&gt; src — no fetch() needed</span>`,
+    ``,
+    `<span class="kw">const</span> <span class="var">BASE_URL</span> <span class="punc">=</span> <span class="str">"${base()}"</span><span class="punc">;</span>`,
+    ``,
+    `<span class="cmt">// Add to your HTML:</span>`,
+    `<span class="cmt">// &lt;img id="cam" style="width:100%" /&gt;</span>`,
+    ``,
+    `<span class="kw">const</span> <span class="var">img</span> <span class="punc">=</span> <span class="var">document</span><span class="punc">.</span><span class="fn">getElementById</span><span class="punc">(</span><span class="str">'cam'</span><span class="punc">);</span>`,
+    `<span class="var">img</span><span class="punc">.</span><span class="var">src</span> <span class="punc">=</span> <span class="str">\`\${BASE_URL}/robot/camera/${side}\`</span><span class="punc">;</span>`,
+    ``,
+    `<span class="cmt">// To stop the stream:</span>`,
+    `<span class="cmt">// img.src = '';</span>`,
+  ].join('\n');
+
+  // C pane
+  const cCode = [
+    `<span class="cmt">/* ${label} — MJPEG stream to file */</span>`,
+    `<span class="cmt">/* compile: gcc main.c -o main -lcurl */</span>`,
+    ``,
+    `<span class="kw">#include</span> <span class="str">&lt;stdio.h&gt;</span>`,
+    `<span class="kw">#include</span> <span class="str">&lt;curl/curl.h&gt;</span>`,
+    ``,
+    `<span class="type">int</span> <span class="fn">main</span><span class="punc">() {</span>`,
+    `  <span class="fn">curl_global_init</span><span class="punc">(</span><span class="var">CURL_GLOBAL_ALL</span><span class="punc">);</span>`,
+    `  <span class="type">CURL</span><span class="punc">*</span><span class="var">curl</span> <span class="punc">=</span> <span class="fn">curl_easy_init</span><span class="punc">();</span>`,
+    ``,
+    `  <span class="cmt">/* Stream URL */</span>`,
+    `  <span class="fn">curl_easy_setopt</span><span class="punc">(</span><span class="var">curl</span><span class="punc">,</span><span class="var">CURLOPT_URL</span><span class="punc">,</span><span class="str">"${url}"</span><span class="punc">);</span>`,
+    ``,
+    `  <span class="cmt">/* Write raw MJPEG bytes to stdout (pipe to ffmpeg, etc.) */</span>`,
+    `  <span class="fn">curl_easy_setopt</span><span class="punc">(</span><span class="var">curl</span><span class="punc">,</span><span class="var">CURLOPT_WRITEFUNCTION</span><span class="punc">,</span><span class="var">NULL</span><span class="punc">);</span>`,
+    `  <span class="fn">curl_easy_setopt</span><span class="punc">(</span><span class="var">curl</span><span class="punc">,</span><span class="var">CURLOPT_WRITEDATA</span><span class="punc">,</span><span class="fn">stdout</span><span class="punc">);</span>`,
+    ``,
+    `  <span class="cmt">/* Blocks until stream ends or Ctrl-C */</span>`,
+    `  <span class="fn">curl_easy_perform</span><span class="punc">(</span><span class="var">curl</span><span class="punc">);</span>`,
+    ``,
+    `  <span class="fn">curl_easy_cleanup</span><span class="punc">(</span><span class="var">curl</span><span class="punc">);</span>`,
+    `  <span class="fn">curl_global_cleanup</span><span class="punc">();</span>`,
+    `  <span class="kw">return</span> <span class="num">0</span><span class="punc">;</span>`,
+    `<span class="punc">}</span>`,
+  ].join('\n');
+
+  // Postman pane
+  const pmHtml = `<div class="pm-steps">
+    <div class="pm-step">
+      <div class="pm-step-head"><div class="pm-step-num">1</div><div class="pm-step-title">Method &amp; URL</div></div>
+      <div class="pm-step-body">
+        <div class="pm-row"><span class="pm-key">Method</span><span class="pm-val m-get">GET</span></div>
+        <div class="pm-row"><span class="pm-key">URL</span><span class="pm-val">${url}</span></div>
+      </div>
+    </div>
+    <div class="pm-step">
+      <div class="pm-step-head"><div class="pm-step-num">2</div><div class="pm-step-title">Send &amp; view</div></div>
+      <div class="pm-step-body">
+        <div class="pm-row"><span class="pm-key">Response</span><span class="pm-val">multipart/x-mixed-replace — MJPEG byte stream</span></div>
+        <div class="pm-note">Postman may show raw bytes for a streaming response. To view the live video, open the URL directly in a browser tab instead.</div>
+        <div class="pm-hint" style="margin-top:8px;">💡 <strong>Browser shortcut:</strong> paste <code>${url}</code> into any browser address bar — the live camera feed will appear immediately.</div>
+      </div>
+    </div>
+    <div class="pm-step">
+      <div class="pm-step-head"><div class="pm-step-num">3</div><div class="pm-step-title">Available sides</div></div>
+      <div class="pm-step-body">
+        <table class="pm-table">
+          <thead><tr><th>:side</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td>front</td><td>Front-facing RGB camera</td></tr>
+            <tr><td>back</td><td>Rear RGB camera</td></tr>
+            <tr><td>tof</td><td>Time-of-Flight depth sensor</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>`;
+
+  document.getElementById('pane-js').innerHTML =
+    `<div class="code-wrap"><button class="copy-btn" onclick="copyCode('js')">Copy</button><pre>${jsCode}</pre></div>`;
+  document.getElementById('pane-c').innerHTML =
+    `<div class="code-wrap"><button class="copy-btn" onclick="copyCode('c')">Copy</button><pre>${cCode}</pre></div>`;
+  document.getElementById('pane-pm').innerHTML =
+    `<div class="code-wrap" style="padding:4px 0"><button class="copy-btn" onclick="copyCode('pm')">Copy</button>${pmHtml}</div>`;
+}
+
+function stopCamera() {
+  const preview = document.getElementById('camera-preview');
+  preview.innerHTML = 'Select a camera to preview';
+}
+
+// ── Dispatcher ────────────────────────────────────────────────
+function showCode(key) {
+  switch(key) {
+    case 'STATUS':      render('Robot Status',    'GET',  '/robot/status',        null); break;
+    case 'READY':       render('Ready Check',     'GET',  '/robot/ready',         null); break;
+    case 'POSE':        render('Robot Pose',      'GET',  '/robot/pose',          null); break;
+    case 'BATTERY':     render('Battery Info',    'GET',  '/robot/battery',       null); break;
+    case 'LOCATIONS':   render('Get Locations',   'GET',  '/robot/locations',     null); break;
+    case 'SHELVES':     render('Get Shelves',     'GET',  '/robot/shelves',       null); break;
+    case 'MOVING_SHELF':render('Moving Shelf',    'GET',  '/robot/moving-shelf',  null); break;
+    case 'MAPS':        render('List Maps',       'GET',  '/robot/maps',          null); break;
+    case 'MAP_PNG':     render('Map PNG',         'GET',  '/robot/maps/png',      null); break;
+    case 'MOVE': {
+      const body = { locationId: v('move-locId') || 'location-abc123' };
+      const tts  = v('move-tts');
+      if (tts) body.ttsOnSuccess = tts;
+      render('Move to Location', 'POST', '/robot/move', body); break;
+    }
+    case 'RETURN_HOME': render('Return Home',     'POST', '/robot/return-home',   {}); break;
+    case 'PAUSE':       render('Pause Robot',     'POST', '/robot/pause',         {}); break;
+    case 'RESUME':      render('Resume Robot',    'POST', '/robot/resume',        {}); break;
+    case 'ESTOP':       render('Emergency Stop',  'POST', '/robot/emergency-stop',{}); break;
+  }
+}
+</script>
+</body>
+</html>

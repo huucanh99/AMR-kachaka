@@ -335,6 +335,129 @@ router.patch('/shelf-layers/:shelfId/:layer', async (req, res) => {
   } catch (err) { handleError(res, err); }
 });
 
+/** GET /api/robot/camera/:side — MJPEG live stream (side: front | back | tof) */
+router.get('/camera/:side', (req, res) => {
+  const METHODS = {
+    front: 'GetFrontCameraRosCompressedImage',
+    back:  'GetBackCameraRosCompressedImage',
+    tof:   'GetTofCameraRosCompressedImage',
+  };
+
+  const method = METHODS[req.params.side];
+  if (!method) {
+    return res.status(400).json({ success: false, error: 'side must be front, back, or tof' });
+  }
+
+  res.setHeader('Content-Type', 'multipart/x-mixed-replace; boundary=frame');
+  res.setHeader('Cache-Control', 'no-cache, no-store');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders();
+
+  let alive = true;
+  req.on('close', () => { alive = false; });
+
+  async function loop() {
+    if (!alive) return;
+    try {
+      const resp = await call(method, getRequest());
+      const bytes = resp?.image?.data;
+      if (bytes && bytes.length && alive) {
+        const buf = Buffer.isBuffer(bytes) ? bytes : Buffer.from(bytes);
+        res.write(`--frame\r\nContent-Type: image/jpeg\r\nContent-Length: ${buf.length}\r\n\r\n`);
+        res.write(buf);
+        res.write('\r\n');
+      }
+    } catch (err) {
+      console.warn('[Camera] frame error:', err.message);
+    }
+    if (alive) setTimeout(loop, 100);
+  }
+
+  loop();
+});
+
+// ---------------------------------------------------------------------------
+// Map management
+// ---------------------------------------------------------------------------
+
+/** GET /api/robot/maps — list all maps + current map id */
+router.get('/maps', async (req, res) => {
+  try {
+    const [listData, currentData] = await Promise.all([
+      call('GetMapList', getRequest()),
+      call('GetCurrentMapId', getRequest()),
+    ]);
+    res.json({
+      success: true,
+      data: {
+        maps: listData.map_list_entries || [],
+        currentMapId: currentData.id || null,
+      },
+    });
+  } catch (err) { handleError(res, err); }
+});
+
+/** GET /api/robot/maps/png — current map as PNG (base64) */
+router.get('/maps/png', async (req, res) => {
+  try {
+    const data = await call('GetPngMap', getRequest());
+    const map = data.map;
+    if (!map || !map.data || !map.data.length) {
+      return res.json({ success: true, data: null });
+    }
+    const buf = Buffer.isBuffer(map.data) ? map.data : Buffer.from(map.data);
+    res.json({
+      success: true,
+      data: {
+        image: `data:image/png;base64,${buf.toString('base64')}`,
+        name: map.name,
+        width: map.width,
+        height: map.height,
+        resolution: map.resolution,
+      },
+    });
+  } catch (err) { handleError(res, err); }
+});
+
+/** GET /api/robot/maps/:id/preview — preview a specific map */
+router.get('/maps/:id/preview', async (req, res) => {
+  try {
+    const data = await call('LoadMapPreview', { map_id: req.params.id });
+    if (!data.result.success) {
+      return res.status(500).json({ success: false, error: `LoadMapPreview failed (code ${data.result.error_code})` });
+    }
+    const map = data.map;
+    if (!map || !map.data || !map.data.length) {
+      return res.json({ success: true, data: null });
+    }
+    const buf = Buffer.isBuffer(map.data) ? map.data : Buffer.from(map.data);
+    res.json({
+      success: true,
+      data: {
+        image: `data:image/png;base64,${buf.toString('base64')}`,
+        name: map.name,
+        width: map.width,
+        height: map.height,
+        resolution: map.resolution,
+      },
+    });
+  } catch (err) { handleError(res, err); }
+});
+
+/** POST /api/robot/maps/switch — switch to a different map */
+router.post('/maps/switch', async (req, res) => {
+  try {
+    const { mapId } = req.body;
+    if (!mapId) return res.status(400).json({ success: false, error: 'mapId is required' });
+    const data = await call('SwitchMap', { map_id: mapId });
+    if (!data.result.success) {
+      return res.status(500).json({ success: false, error: `SwitchMap failed (code ${data.result.error_code})` });
+    }
+    req.io.emit('robot:map_switched', { mapId });
+    res.json({ success: true });
+  } catch (err) { handleError(res, err); }
+});
+
 /** GET /api/robot/events?limit=20 */
 router.get('/events', async (req, res) => {
   try {

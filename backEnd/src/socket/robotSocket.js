@@ -233,15 +233,17 @@ async function runTaskMachine(io, status) {
 
   const movingPhases = ['going_to_pickup', 'going_to_destination'];
 
-  // Watchdog: if in a moving phase (not paused) and the current command on
-  // the robot no longer matches the one we issued, someone replaced it.
-  // After a grace period we re-issue our move command.
+  // Watchdog: if in a moving phase (not paused) and the robot is RUNNING a
+  // different command than the one we issued, someone replaced it.
+  // Only fire when RUNNING — PENDING means the robot arrived naturally, not
+  // that our command was hijacked.
   if (
     runner.taskId &&
     movingPhases.includes(runner.phase) &&
     !runner.paused &&
     runner.commandId &&
-    commandId !== runner.commandId
+    commandId !== runner.commandId &&
+    commandState === 'COMMAND_STATE_RUNNING'
   ) {
     runner.watchdogTicks++;
     if (runner.watchdogTicks >= 4) {
@@ -268,9 +270,11 @@ async function runTaskMachine(io, status) {
   // Extra guards:
   //   - not paused (pause cancels the command, causing a spurious RUNNING→PENDING)
   //   - the command that just completed was the one WE issued (not a rogue command)
+  // If the previous tick showed our commandId on the robot, the command that
+  // just completed (RUNNING→PENDING) was ours — even if the API clears commandId.
   const ourCommandCompleted =
     !runner.commandId ||
-    (runner.prevCommandId === runner.commandId && commandId === runner.commandId);
+    runner.prevCommandId === runner.commandId;
 
   if (
     runner.taskId &&

@@ -54,4 +54,11 @@ function getRequest(cursor = '0') {
   return { metadata: { cursor } };
 }
 
-module.exports = { getStub, call, getRequest };
+function resetStub(host, port) {
+  _stub = null;
+  process.env.KACHAKA_HOST = host;
+  process.env.KACHAKA_PORT = String(port);
+  return getStub();
+}
+
+module.exports = { getStub, call, getRequest, resetStub };

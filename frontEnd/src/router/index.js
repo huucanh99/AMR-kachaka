@@ -8,6 +8,8 @@ import SettingsView        from '../views/SettingsView.vue'
 import ShelfManagementView from '../views/ShelfManagementView.vue'
 import LoginView           from '../views/LoginView.vue'
 import UserManagementView  from '../views/UserManagementView.vue'
+import CameraView          from '../views/CameraView.vue'
+import MapView             from '../views/MapView.vue'
 
 const routes = [
   { path: '/login', name: 'login', component: LoginView, meta: { public: true } },
@@ -20,6 +22,8 @@ const routes = [
   { path: '/settings',         name: 'settings',         component: SettingsView },
   { path: '/shelf-management', name: 'shelf-management', component: ShelfManagementView },
   { path: '/users',            name: 'users',            component: UserManagementView, meta: { role: 'admin' } },
+  { path: '/camera',           name: 'camera',           component: CameraView, meta: { role: 'admin' } },
+  { path: '/map-management',  name: 'map-management',  component: MapView,    meta: { role: 'admin' } },
 ]
 
 const router = createRouter({

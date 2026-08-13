@@ -10,6 +10,8 @@ export const translations = {
     'nav.shelfManagement':  'Shelf management',
     'nav.userManagement':   'User management',
     'nav.admin':            'Admin',
+    'nav.camera':           'Camera',
+    'nav.mapManagement':    'Map management',
 
     // Topbar
     'title.dashboard':       'Dashboard',
@@ -19,6 +21,8 @@ export const translations = {
     'title.logs':            'Logs',
     'title.settings':        'Settings',
     'title.shelfManagement': 'Shelf management',
+    'title.camera':          'Camera — AMR-01',
+    'title.mapManagement':   'Map management',
     'battery.charging':      'Charging',
     'battery.discharging':   'Discharging',
     'battery.full':          'Full',
@@ -196,6 +200,9 @@ export const translations = {
     'settings.deliveryTimeout':     'Delivery timeout',
     'settings.deliveryTimeoutHint': "Seconds before alerting admin if receiver doesn't verify",
     'settings.language':            'Language',
+    'settings.kachakaHost':         'Robot IP address',
+    'settings.kachakaHostHint':     'IP of the Kachaka robot on your network',
+    'settings.kachakaPort':         'Robot port',
     'settings.saved':               'Settings saved.',
     'settings.sec':                 'sec',
 
@@ -217,6 +224,35 @@ export const translations = {
     'users.createdAt':    'Created',
     'users.loadFailed':   'Failed to load users',
     'users.createFailed': 'Failed to create user',
+
+    // Camera
+    'camera.title':      'Live camera feed',
+    'camera.front':      'Front camera',
+    'camera.back':       'Back camera',
+    'camera.tof':        'Depth (ToF)',
+    'camera.connecting': 'Connecting to stream…',
+    'camera.error':      'Stream unavailable',
+    'camera.retry':      'Retry',
+
+    // Map management
+    'map.currentMap':       'Current map',
+    'map.mapList':          'Map list',
+    'map.noMaps':           'No maps available',
+    'map.noImage':          'No map image',
+    'map.active':           'Active',
+    'map.preview':          'Preview',
+    'map.switchTo':         'Switch to this map',
+    'map.switching':        'Switching…',
+    'map.switchSuccess':    'Map switched successfully',
+    'map.switchFailed':     'Failed to switch map',
+    'map.resolution':       'Resolution',
+    'map.size':             'Size',
+    'map.refresh':          'Refresh',
+    'map.loading':          'Loading map…',
+    'map.previewLoading':   'Loading preview…',
+    'map.confirmSwitch':    'Switch to map "{name}"?',
+    'map.confirmSwitchDesc':'The robot will use the new map. Make sure the robot is in the correct location.',
+    'map.confirmBtn':       'Confirm switch',
 
     // Login
     'login.title':      'Sign in',
@@ -251,6 +287,8 @@ export const translations = {
     'nav.shelfManagement': '貨架管理',
     'nav.userManagement':  '使用者管理',
     'nav.admin':           '管理員',
+    'nav.camera':          '攝影機',
+    'nav.mapManagement':   '地圖管理',
 
     // Topbar
     'title.dashboard':       '儀表板',
@@ -260,6 +298,8 @@ export const translations = {
     'title.logs':            '系統日誌',
     'title.settings':        '設定',
     'title.shelfManagement': '貨架管理',
+    'title.camera':          '攝影機 — AMR-01',
+    'title.mapManagement':   '地圖管理',
     'battery.charging':      '充電中',
     'battery.discharging':   '使用中',
     'battery.full':          '已充飽',
@@ -437,6 +477,9 @@ export const translations = {
     'settings.deliveryTimeout':     '配送逾時',
     'settings.deliveryTimeoutHint': '收件人未驗證時通知管理員的秒數',
     'settings.language':            '語言',
+    'settings.kachakaHost':         '機器人 IP 位址',
+    'settings.kachakaHostHint':     '網路中 Kachaka 機器人的 IP',
+    'settings.kachakaPort':         '機器人連接埠',
     'settings.saved':               '設定已儲存。',
     'settings.sec':                 '秒',
 
@@ -458,6 +501,35 @@ export const translations = {
     'users.createdAt':    '建立時間',
     'users.loadFailed':   '載入使用者失敗',
     'users.createFailed': '建立使用者失敗',
+
+    // Camera
+    'camera.title':      '即時攝影機畫面',
+    'camera.front':      '前置攝影機',
+    'camera.back':       '後置攝影機',
+    'camera.tof':        '深度攝影機 (ToF)',
+    'camera.connecting': '連線中…',
+    'camera.error':      '串流無法使用',
+    'camera.retry':      '重試',
+
+    // Map management
+    'map.currentMap':       '目前地圖',
+    'map.mapList':          '地圖列表',
+    'map.noMaps':           '無可用地圖',
+    'map.noImage':          '無地圖圖片',
+    'map.active':           '使用中',
+    'map.preview':          '預覽',
+    'map.switchTo':         '切換至此地圖',
+    'map.switching':        '切換中…',
+    'map.switchSuccess':    '地圖切換成功',
+    'map.switchFailed':     '地圖切換失敗',
+    'map.resolution':       '解析度',
+    'map.size':             '尺寸',
+    'map.refresh':          '重新整理',
+    'map.loading':          '載入地圖中…',
+    'map.previewLoading':   '載入預覽中…',
+    'map.confirmSwitch':    '切換至地圖「{name}」？',
+    'map.confirmSwitchDesc':'機器人將使用新地圖，請確認機器人位於正確位置。',
+    'map.confirmBtn':       '確認切換',
 
     // Login
     'login.title':      '登入',

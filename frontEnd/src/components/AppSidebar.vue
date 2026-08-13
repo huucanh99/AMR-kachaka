@@ -73,6 +73,25 @@
       {{ t('nav.userManagement') }}
       <span class="admin-badge">{{ t('nav.admin') }}</span>
     </RouterLink>
+
+    <RouterLink v-if="isAdmin" class="nav-item" to="/map-management">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M1 3l5 2 4-2 5 2v8l-5-2-4 2-5-2V3z"/>
+        <path d="M6 5v8M10 3v8"/>
+      </svg>
+      {{ t('nav.mapManagement') }}
+      <span class="admin-badge">{{ t('nav.admin') }}</span>
+    </RouterLink>
+
+    <RouterLink v-if="isAdmin" class="nav-item" to="/camera">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+        <rect x="1" y="4" width="10" height="8" rx="1.5"/>
+        <path d="M11 7l4-2v6l-4-2"/>
+        <circle cx="5" cy="8" r="1.5" fill="currentColor" stroke="none"/>
+      </svg>
+      {{ t('nav.camera') }}
+      <span class="admin-badge">{{ t('nav.admin') }}</span>
+    </RouterLink>
   </div>
 </template>
 

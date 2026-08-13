@@ -14,7 +14,7 @@ function makeError(message, httpStatus, code) {
   return err;
 }
 
-async function register({ username, email, password, role = 'operator' }) {
+async function register({ username, password, role = 'operator' }) {
   if (!username?.trim() || !password?.trim()) {
     throw makeError('username and password are required', 400);
   }
@@ -31,14 +31,14 @@ async function register({ username, email, password, role = 'operator' }) {
   let rows;
   try {
     ({ rows } = await pool.query(
-      `INSERT INTO users (username, email, password, role)
-       VALUES ($1, $2, $3, $4)
-       RETURNING id, username, email, role, created_at`,
-      [username.trim(), email ? email.trim().toLowerCase() : null, hashed, role]
+      `INSERT INTO users (username, password, role)
+       VALUES ($1, $2, $3)
+       RETURNING id, username, role, created_at`,
+      [username.trim(), hashed, role]
     ));
   } catch (err) {
     if (err.message?.includes('UNIQUE')) {
-      throw makeError('Username or email already exists', 409, 'DUPLICATE');
+      throw makeError('Username already exists', 409, 'DUPLICATE');
     }
     throw err;
   }
@@ -70,13 +70,13 @@ async function login({ username, password }) {
 
   return {
     token,
-    user: { id: user.id, username: user.username, email: user.email, role: user.role },
+    user: { id: user.id, username: user.username, role: user.role },
   };
 }
 
 async function listUsers() {
   const { rows } = await pool.query(
-    'SELECT id, username, email, role, created_at FROM users ORDER BY created_at DESC'
+    'SELECT id, username, role, created_at FROM users ORDER BY created_at DESC'
   );
   return rows;
 }

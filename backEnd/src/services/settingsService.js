@@ -1,6 +1,7 @@
 'use strict';
 
 const { pool } = require('../config/db');
+const { resetStub } = require('../grpc/kachakaClient');
 
 const VALID_LANGS = ['en', 'zh-TW'];
 
@@ -8,6 +9,8 @@ const DEFAULTS = {
   pickup_timeout_seconds:   30,
   delivery_timeout_seconds: 30,
   language:                 'en',
+  kachaka_host:             process.env.KACHAKA_HOST || '192.168.0.26',
+  kachaka_port:             process.env.KACHAKA_PORT || '26400',
 };
 
 async function getSettings() {
@@ -19,10 +22,12 @@ async function getSettings() {
     pickupTimeoutSeconds:   Math.max(1, Number(map.pickup_timeout_seconds)   || DEFAULTS.pickup_timeout_seconds),
     deliveryTimeoutSeconds: Math.max(1, Number(map.delivery_timeout_seconds) || DEFAULTS.delivery_timeout_seconds),
     language:               VALID_LANGS.includes(map.language) ? map.language : DEFAULTS.language,
+    kachakaHost:            map.kachaka_host || DEFAULTS.kachaka_host,
+    kachakaPort:            Number(map.kachaka_port || DEFAULTS.kachaka_port),
   };
 }
 
-async function updateSettings({ pickupTimeoutSeconds, deliveryTimeoutSeconds, language } = {}) {
+async function updateSettings({ pickupTimeoutSeconds, deliveryTimeoutSeconds, language, kachakaHost, kachakaPort } = {}) {
   const ops = [];
 
   if (pickupTimeoutSeconds !== undefined) {
@@ -51,7 +56,32 @@ async function updateSettings({ pickupTimeoutSeconds, deliveryTimeoutSeconds, la
     ));
   }
 
+  if (kachakaHost !== undefined && kachakaHost.trim()) {
+    ops.push(pool.query(
+      `INSERT INTO settings (key, value) VALUES ($1, $2)
+       ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
+      ['kachaka_host', kachakaHost.trim()]
+    ));
+  }
+
+  if (kachakaPort !== undefined) {
+    const p = Math.max(1, Math.round(Number(kachakaPort)));
+    ops.push(pool.query(
+      `INSERT INTO settings (key, value) VALUES ($1, $2)
+       ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
+      ['kachaka_port', String(p)]
+    ));
+  }
+
   await Promise.all(ops);
+
+  // Reconnect gRPC if IP/port changed
+  if (kachakaHost !== undefined || kachakaPort !== undefined) {
+    const updated = await getSettings();
+    resetStub(updated.kachakaHost, updated.kachakaPort);
+    return updated;
+  }
+
   return getSettings();
 }
 

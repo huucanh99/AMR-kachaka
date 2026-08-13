@@ -241,7 +241,14 @@ function loadLocationsCache() {
   } catch { return null }
 }
 
-const onConnect       = () => { connected.value = true  }
+const onConnect = async () => {
+  connected.value = true
+  try {
+    const locRes = await getLocations()
+    locations.value = locRes.data.data
+    saveLocationsCache(locations.value)
+  } catch {}
+}
 const onDisconnect    = () => { connected.value = false }
 const onRobotStatus   = (s) => { robotStatus.value = s  }
 const onTaskCreated   = () => refreshTasks()

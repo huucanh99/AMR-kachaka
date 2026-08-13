@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<title>AMR Kachaka — 功能總覽</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family: 'Microsoft JhengHei', '微軟正黑體', Arial, sans-serif;
+    background: #f5f6f8;
+    color: #1a1a2e;
+    padding: 40px;
+  }
+
+  .page {
+    max-width: 960px;
+    margin: 0 auto;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+    overflow: hidden;
+  }
+
+  /* header */
+  .header {
+    background: linear-gradient(135deg, #1e3a5f, #2563eb);
+    padding: 32px 40px;
+    color: #fff;
+  }
+  .header h1 { font-size: 26px; font-weight: 700; margin-bottom: 6px; }
+  .header p  { font-size: 14px; color: rgba(255,255,255,0.65); }
+
+  /* table */
+  .wrap { padding: 32px 40px; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+  }
+
+  thead tr {
+    background: #1e3a5f;
+    color: #fff;
+  }
+  thead th {
+    padding: 12px 14px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.3px;
+  }
+  thead th:first-child { border-radius: 0; width: 36px; text-align: center; }
+  thead th:nth-child(2){ width: 160px; }
+  thead th:nth-child(3){ width: 120px; }
+
+  tbody tr { border-bottom: 1px solid #eef0f4; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: #f0f5ff; }
+
+  td { padding: 11px 14px; vertical-align: top; line-height: 1.6; }
+  td:first-child { text-align: center; color: #6b7280; font-size: 12px; font-weight: 600; }
+
+  .page-name {
+    font-weight: 700;
+    color: #1e3a5f;
+    font-size: 14px;
+    margin-bottom: 2px;
+  }
+  .page-url {
+    font-size: 11px;
+    color: #9ca3af;
+    font-family: Consolas, monospace;
+  }
+
+  .feature-list { color: #374151; }
+  .feature-list li { list-style: none; padding-left: 14px; position: relative; }
+  .feature-list li::before { content: '·'; position: absolute; left: 0; color: #2563eb; font-weight: 700; }
+
+  .badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 9px;
+    border-radius: 99px;
+    white-space: nowrap;
+  }
+  .b-admin  { background: #fee2e2; color: #dc2626; }
+  .b-all    { background: #dbeafe; color: #1d4ed8; }
+  .b-user   { background: #d1fae5; color: #065f46; }
+
+  .note { font-size: 11.5px; color: #6b7280; margin-top: 4px; }
+
+  /* section divider rows */
+  .section-row td {
+    background: #f8f9fb;
+    color: #6b7280;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 6px 14px;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  /* footer */
+  .footer {
+    padding: 18px 40px;
+    border-top: 1px solid #eef0f4;
+    font-size: 12px;
+    color: #9ca3af;
+    display: flex;
+    justify-content: space-between;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- 標題 -->
+  <div class="header">
+    <h1>AMR Kachaka 管理平台 — 網頁功能總覽</h1>
+    <p>各頁面介面說明 · 2026年5月</p>
+  </div>
+
+  <div class="wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>頁面名稱</th>
+        <th>存取權限</th>
+        <th>功能說明</th>
+      </tr>
+    </thead>
+    <tbody>
+
+      <!-- 帳號 -->
+      <tr class="section-row"><td colspan="4">帳號與認證</td></tr>
+
+      <tr>
+        <td>1</td>
+        <td>
+          <div class="page-name">登入</div>
+          <div class="page-url">/login</div>
+        </td>
+        <td><span class="badge b-all">所有人</span></td>
+        <td>
+          <ul class="feature-list">
+            <li>輸入帳號密碼登入系統</li>
+            <li>登入成功後自動跳轉至首頁</li>
+            <li>登入失敗顯示錯誤訊息</li>
+            <li>提供前往「註冊」頁面的連結</li>
+            <li>JWT Token 存於瀏覽器，逾期自動登出</li>
+          </ul>
+        </td>
+      </tr>
+
+      <tr>
+        <td>2</td>
+        <td>
+          <div class="page-name">註冊</div>
+          <div class="page-url">/register</div>
+        </td>
+        <td><span class="badge b-all">所有人</span></td>
+        <td>
+          <ul class="feature-list">
+            <li>填寫帳號與密碼建立新帳戶</li>
+            <li>帳號重複時顯示錯誤提示</li>
+            <li>新帳戶預設為一般使用者（非管理員）</li>
+          </ul>
+        </td>
+      </tr>
+
+      <!-- 主要功能 -->
+      <tr class="section-row"><td colspan="4">主要功能頁面</td></tr>
+
+      <tr>
+        <td>3</td>
+        <td>
+          <div class="page-name">首頁 / 儀表板</div>
+          <div class="page-url">/</div>
+        </td>
+        <td><span class="badge b-user">一般使用者</span></td>
+        <td>
+          <ul class="feature-list">
+            <li>平面地圖：顯示所有已登記地點，機器人目前位置以藍色燈號標示（移動中閃爍、到達時常亮）</li>
+            <li>機器人狀態：即時顯示運行狀態（導航中 / 閒置）與連線狀況</li>
+            <li>任務佇列：列出執行中與等待中的任務（含取消按鈕）</li>
+            <li>系統日誌：顯示最新事件紀錄</li>
+            <li>通知提示：任務到達取貨點、送達目的地、逾時等事件以彈出訊息通知</li>
+          </ul>
+        </td>
+      </tr>
+
+      <tr>
+        <td>4</td>
+        <td>
+          <div class="page-name">建立任務</div>
+          <div class="page-url">/create-task</div>
+        </td>
+        <td><span class="badge b-user">一般使用者</span></td>
+        <td>
+          <ul class="feature-list">
+            <li>選擇取貨地點（下拉選單）</li>
+            <li>選擇目的地（下拉選單）</li>
+            <li>選擇棚架層（僅顯示「使用中」的層；未掛載棚架時停用）</li>
+            <li>輸入驗證碼（選擇棚架層時為必填，最少 4 碼）</li>
+            <li>輸入收件人姓名（記錄於任務歷史）</li>
+            <li>送出任務 / 重設表單</li>
+          </ul>
+          <div class="note">任務送出後立即加入佇列，機器人閒置時自動開始執行</div>
+        </td>
+      </tr>
+
+      <tr>
+        <td>5</td>
+        <td>
+          <div class="page-name">任務歷史</div>
+          <div class="page-url">/task-history</div>
+        </td>
+        <td><span class="badge b-user">一般使用者</span></td>
+        <td>
+          <ul class="feature-list">
+            <li>依狀態篩選：全部 / 等待中 / 執行中 / 完成 / 已取消 / 失敗</li>
+            <li>依任務 ID 搜尋</li>
+            <li>點擊任一列展開詳細資訊：取貨、目的地、收件人、棚架層、各時間點記錄</li>
+            <li>任務狀態時間軸（Timeline）</li>
+            <li>「重新執行」按鈕：執行中任務卡住時可重送指令</li>
+          </ul>
+        </td>
+      </tr>
+
+      <tr>
+        <td>6</td>
+        <td>
+          <div class="page-name">系統日誌</div>
+          <div class="page-url">/logs</div>
+        </td>
+        <td><span class="badge b-user">一般使用者</span></td>
+        <td>
+          <ul class="feature-list">
+            <li>篩選機器人（AMR-01 或全部）</li>
+            <li>關鍵字搜尋</li>
+            <li>依等級篩選：全部 / INFO / WARNING / ERROR</li>
+            <li>即時接收新日誌（Socket.io，無需重新整理）</li>
+            <li>記錄內容：移動指令、連線事件、任務事件、gRPC 錯誤</li>
+          </ul>
+        </td>
+      </tr>
+
+      <tr>
+        <td>7</td>
+        <td>
+          <div class="page-name">棚架管理</div>
+          <div class="page-url">/shelf-management</div>
+        </td>
+        <td><span class="badge b-user">一般使用者</span></td>
+        <td>
+          <ul class="feature-list">
+            <li>查看所有棚架層清單（層號、狀態、最大承重）</li>
+            <li>狀態：使用中（Active）/ 閒置（Idle）/ 佔用中（Busy）</li>
+            <li>啟用 / 停用 / 編輯最大承重 / 刪除各層</li>
+            <li>新增棚架層</li>
+          </ul>
+          <div class="note">僅「使用中」的層會出現在建立任務的選單中</div>
+        </td>
+      </tr>
+
+      <tr>
+        <td>8</td>
+        <td>
+          <div class="page-name">系統設定</div>
+          <div class="page-url">/settings</div>
+        </td>
+        <td><span class="badge b-user">一般使用者</span></td>
+        <td>
+          <ul class="feature-list">
+            <li>機器人名稱、最高速度、電量警告門檻</li>
+            <li>自動返回充電站（開關切換）</li>
+            <li>取貨超時秒數 / 送達超時秒數</li>
+            <li>介面語言切換（English / 繁體中文）</li>
+          </ul>
+        </td>
+      </tr>
+
+      <!-- 管理員 -->
+      <tr class="section-row"><td colspan="4">管理員專屬頁面</td></tr>
+
+      <tr>
+        <td>9</td>
+        <td>
+          <div class="page-name">機器人狀態</div>
+          <div class="page-url">/robot-status</div>
+        </td>
+        <td><span class="badge b-admin">管理員</span></td>
+        <td>
+          <ul class="feature-list">
+            <li>即時監控：運行狀態、電量 %、速度（m/s）、X / Y 座標、目前任務、連線狀態</li>
+            <li>手動控制（每個按鈕需二次確認）：</li>
+            <li>　⏸ 暫停 — 暫停機器人移動</li>
+            <li>　▶ 繼續 — 從暫停狀態恢復</li>
+            <li>　📦 掛載棚架 — 機器人抬起棚架</li>
+            <li>　↑ 卸載棚架 — 機器人放下棚架</li>
+            <li>　🏠 返回充電站</li>
+            <li>　🚨 緊急停止 — 立即停止所有動作</li>
+          </ul>
+          <div class="note">任務執行中，僅允許暫停 / 繼續 / 緊急停止；手動移動指令自動封鎖</div>
+        </td>
+      </tr>
+
+      <tr>
+        <td>10</td>
+        <td>
+          <div class="page-name">使用者管理</div>
+          <div class="page-url">/users</div>
+        </td>
+        <td><span class="badge b-admin">管理員</span></td>
+        <td>
+          <ul class="feature-list">
+            <li>建立新帳戶（帳號 + 密碼）</li>
+            <li>查看所有使用者清單（帳號、建立日期）</li>
+            <li>刪除一般使用者帳戶（管理員帳戶無法刪除）</li>
+          </ul>
+        </td>
+      </tr>
+
+      <tr>
+        <td>11</td>
+        <td>
+          <div class="page-name">攝影機</div>
+          <div class="page-url">/camera</div>
+        </td>
+        <td><span class="badge b-admin">管理員</span></td>
+        <td>
+          <ul class="feature-list">
+            <li>切換鏡頭：前鏡頭 / 後鏡頭 / ToF 深度鏡頭</li>
+            <li>即時影像串流（約 10 fps）</li>
+            <li>串流載入中顯示轉圈動畫</li>
+            <li>串流失敗時顯示「重試」按鈕</li>
+          </ul>
+        </td>
+      </tr>
+
+    </tbody>
+  </table>
+  </div>
+
+  <div class="footer">
+    <span>AMR Kachaka Management Platform · 2026年5月</span>
+    <span>共 11 個頁面 · 2 種角色（管理員 / 一般使用者）</span>
+  </div>
+
+</div>
+</body>
+</html>
