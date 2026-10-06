@@ -1,0 +1,109 @@
+Mình đang dùng Kachaka và đã tự viết một app điều khiển robot qua Kachaka API/gRPC.
+
+Hiện tại robot vẫn truy cập được từ PC trong LAN qua:
+IP: 192.168.0.26
+Port: 26400
+
+Đã test:
+Test-NetConnection 192.168.0.26 -Port 26400
+=> TcpTestSucceeded: True
+
+Python kachaka-api cũng connect được:
+client = KachakaApiClient("192.168.0.26:26400")
+
+Public API hiện thấy có các method như:
+get_map_list, get_current_map_id, export_map, import_map,
+restart_robot, move_to_location, move_to_pose, return_home,
+get_robot_pose, get_robot_serial_number, get_robot_version,
+camera/sensor methods, v.v.
+
+Không thấy các method:
+factory_reset
+unlink
+account
+pair
+registration
+wifi
+network
+
+Vấn đề:
+Mình đã xóa Kachaka khỏi app điện thoại, nhưng robot vẫn phát giọng báo rằng nó vẫn đang được liên kết với account/device cũ.
+Trong app điện thoại hiện không còn thấy robot nên không thể unlink/delete lại theo cách bình thường.
+
+YÊU CẦU QUAN TRỌNG:
+CHỈ PHÂN TÍCH VÀ TÌM HIỂU.
+KHÔNG sửa code.
+KHÔNG chạy command.
+KHÔNG gọi API.
+KHÔNG reset robot.
+KHÔNG xóa map.
+KHÔNG thay đổi config.
+KHÔNG tạo file.
+KHÔNG commit.
+KHÔNG thực hiện bất kỳ hành động nào lên robot hoặc project.
+
+Hãy đọc và phân tích source code hiện tại để trả lời:
+
+1. Project hiện tại có bất kỳ code/function/service nào liên quan tới:
+   - unlink account
+   - clear pairing
+   - reset registration
+   - setup state
+   - network/Wi-Fi reset
+   - factory reset
+   hay không?
+
+2. Ngoài Kachaka public gRPC API ở port 26400, project có tham chiếu tới:
+   - HTTP/HTTPS endpoint
+   - WebSocket
+   - gRPC service khác
+   - ROS service/topic
+   - protobuf khác
+   - local web service
+   - shell/SSH
+   - service port khác
+   hay không?
+
+3. Tìm trong source các keyword:
+   factory
+   reset
+   unlink
+   pairing
+   registration
+   account
+   owner
+   auth
+   setup
+   wifi
+   network
+   initialize
+   delete
+   grpc
+   protobuf
+   ROS
+
+4. Nếu có kết quả đáng chú ý, chỉ báo cáo:
+   - file path
+   - class/function
+   - endpoint/RPC/service name
+   - port nếu có
+   - nó dùng để làm gì
+   - có khả năng liên quan đến pairing/account binding hay không
+
+5. Đánh giá liệu tình trạng:
+   “mobile app đã xóa robot nhưng robot vẫn nghĩ nó còn linked”
+   có thể xử lý được chỉ bằng các interface mà project hiện tại đã biết hay không.
+
+6. Nếu không có cách trực tiếp, hãy phân tích các hướng khả thi về mặt kiến trúc, ví dụ:
+   - local service khác trên robot
+   - recovery/service mode
+   - account binding nằm ở cloud hay local
+   - mobile app có thể dùng private API khác public Kachaka API hay không
+
+7. Phân loại rõ mọi kết luận thành:
+   - Confirmed by current source code
+   - Likely
+   - Speculation
+   - Not supported by current project
+
+Chỉ nghiên cứu và báo cáo. Tuyệt đối không thực thi hoặc thay đổi bất kỳ thứ gì.
